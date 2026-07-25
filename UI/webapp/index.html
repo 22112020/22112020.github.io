@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TGQ — Trust Generator Qualitynumbers</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<nav class="navbar">
+  <div class="nav-brand">TGQ <span class="nav-sub">Trust Generator Qualitynumbers</span></div>
+  <div class="nav-links">
+    <a href="#" class="active" data-page="dashboard">Dashboard</a>
+    <a href="#" data-page="predict">Prediksi</a>
+    <a href="#" data-page="markets">Market</a>
+    <a href="#" data-page="about">About</a>
+  </div>
+</nav>
+
+<div class="container">
+
+  <!-- DASHBOARD -->
+  <section id="page-dashboard" class="page active">
+    <div class="stats-grid" id="statsGrid">
+      <div class="stat-card"><div class="stat-label">Status</div><div class="stat-value" id="sysStatus">—</div></div>
+      <div class="stat-card"><div class="stat-label">Engine</div><div class="stat-value" id="sysEngines">—</div></div>
+      <div class="stat-card"><div class="stat-label">Market</div><div class="stat-value" id="sysMarkets">—</div></div>
+      <div class="stat-card"><div class="stat-label">Sync</div><div class="stat-value" id="sysSync">—</div></div>
+    </div>
+    <div class="card" id="latestPrediction">
+      <div class="card-header">Prediksi Terakhir</div>
+      <div class="card-body" id="latestResult">Belum ada prediksi.</div>
+    </div>
+    <div class="card">
+      <div class="card-header">Akses Cepat</div>
+      <div class="card-body quick-actions">
+        <button class="btn" onclick="predictTotoMacau()">Toto Macau</button>
+        <button class="btn" onclick="predictOregon('OREGON03')">Oregon 03</button>
+        <button class="btn" onclick="predictOregon('OREGON06')">Oregon 06</button>
+        <button class="btn" onclick="predictOregon('OREGON09')">Oregon 09</button>
+        <button class="btn" onclick="predictOregon('OREGON12')">Oregon 12</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- PREDICT -->
+  <section id="page-predict" class="page">
+    <div class="card">
+      <div class="card-header">Panel Prediksi</div>
+      <div class="card-body">
+        <div class="form-group">
+          <label>Engine</label>
+          <select id="predictEngine">
+            <option value="toto_macau">Toto Macau</option>
+            <option value="oregon">Oregon</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Market</label>
+          <select id="predictMarket">
+            <optgroup label="Toto Macau">
+              <option value="TOTO MACAU">TOTO MACAU</option>
+            </optgroup>
+            <optgroup label="Oregon">
+              <option value="OREGON03">OREGON03</option>
+              <option value="OREGON06">OREGON06</option>
+              <option value="OREGON09">OREGON09</option>
+              <option value="OREGON12">OREGON12</option>
+            </optgroup>
+          </select>
+        </div>
+        <button class="btn btn-primary" onclick="runPrediction()">Jalankan Prediksi</button>
+        <div class="result-box" id="predictResult"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MARKETS -->
+  <section id="page-markets" class="page">
+    <div class="card">
+      <div class="card-header">All Markets</div>
+      <div class="card-body">
+        <div class="search-bar">
+          <input type="text" id="marketSearch" placeholder="Cari market..." oninput="filterMarkets()">
+        </div>
+        <div class="market-grid" id="marketGrid"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ABOUT -->
+  <section id="page-about" class="page">
+    <div class="card">
+      <div class="card-header">Tentang TGQ</div>
+      <div class="card-body about-content">
+        <p><strong>TGQ</strong> — Trust Generator Qualitynumbers.</p>
+        <p>Modular local analysis engine untuk prediksi lottery. Bagian dari ekosistem Luna Core.</p>
+        <p><strong>Teknologi:</strong> Python 3.12+ · FastAPI · unittest</p>
+        <p><strong>Lokasi:</strong> /mnt/d/Alfian/Togelku/</p>
+        <p><strong>Database:</strong> data_harian/ (source) → pasaran_luna/ (structured)</p>
+        <p><strong>Mesin:</strong> Toto Macau · Oregon</p>
+        <p><strong>Market:</strong> 47 total (33 named + 14 orphan)</p>
+        <p><strong>Tests:</strong> 90 · semua lulus</p>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<footer class="footer">
+  TGQ v1.0 · Luna Core · 2026
+</footer>
+
+<script src="js/app.js"></script>
+</body>
+</html>

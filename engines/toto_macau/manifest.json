@@ -1,0 +1,9 @@
+{
+  "name": "toto_macau",
+  "version": "1.0",
+  "type": "prediction",
+  "rule": "toto_macau_rules",
+  "target": ["toto_macau"],
+  "module": "toto_macau.toto_macau_engine",
+  "class": "TotoMacauEngine"
+}

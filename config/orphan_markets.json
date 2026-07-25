@@ -1,0 +1,21 @@
+{
+  "_version": 1,
+  "_description": "Position-based orphan market slot mapping. DO NOT change order of existing entries. Add new entries at the end.",
+  "_format": "after_market is the POOL market that precedes the orphan slot. orphan_index is 0-based position among consecutive orphans after that market.",
+  "slots": [
+    { "after_market": "KING KONG 4D POOL", "orphan_index": 0, "market": "HOKIdraw" },
+    { "after_market": "KING KONG 4D POOL", "orphan_index": 1, "market": "huahin0100" },
+    { "after_market": "KENTUCKYEVE POOL", "orphan_index": 0, "market": "cambodialotto" },
+    { "after_market": "BULLSEYE POOL", "orphan_index": 0, "market": "poipet12" },
+    { "after_market": "OREGON12 POOL", "orphan_index": 0, "market": "sydneylotto" },
+    { "after_market": "CHELSEA 15 POOL", "orphan_index": 0, "market": "poipet15" },
+    { "after_market": "CHELSEA 15 POOL", "orphan_index": 1, "market": "totomali1530" },
+    { "after_market": "CHELSEA 15 POOL", "orphan_index": 2, "market": "huahin1630" },
+    { "after_market": "CHELSEA 19 POOL", "orphan_index": 0, "market": "poipet19" },
+    { "after_market": "PCSO POOL", "orphan_index": 0, "market": "totomali2030" },
+    { "after_market": "PCSO POOL", "orphan_index": 1, "market": "huahin2100" },
+    { "after_market": "BRUNEI 21 POOL", "orphan_index": 0, "market": "poipet22" },
+    { "after_market": "BRUNEI 21 POOL", "orphan_index": 1, "market": "hongkonglotto" },
+    { "after_market": "BRUNEI 21 POOL", "orphan_index": 2, "market": "totomali2330" }
+  ]
+}

@@ -1,0 +1,56 @@
+{
+  "project": {
+    "name": "Togelku Luna Core",
+    "version": "2.0",
+    "description": "Modular local analysis engine architecture",
+    "environment": "local"
+  },
+  "paths": {
+    "database": "pasaran_luna",
+    "daily_data": "data_harian",
+    "rules": "rules",
+    "engines": "engines",
+    "reports": "reports",
+    "logs": "logs"
+  },
+  "runtime": {
+    "language": "python",
+    "python_version": "3.11+",
+    "timezone": "Asia/Jakarta",
+    "encoding": "utf-8"
+  },
+  "modules": {
+    "autoload": true,
+    "enabled_engines": [
+      "oregon",
+      "toto_macau"
+    ]
+  },
+  "api": {
+    "enabled": true,
+    "framework": "fastapi",
+    "host": "0.0.0.0",
+    "port": 8000,
+    "cors": true
+  },
+  "mobile": {
+    "ready_for_native_wrapper": true,
+    "recommended": [
+      "Flutter",
+      "React Native"
+    ]
+  },
+  "ai_agent": {
+    "name": "Leafia",
+    "role": "interface",
+    "rule_execution": "luna_core",
+    "never_calculate_directly": true
+  },
+  "output": {
+    "format": [
+      "json",
+      "markdown"
+    ],
+    "save_reports": true
+  }
+}

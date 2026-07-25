@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>TGQ Android — Prototype</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: 'Roboto', -apple-system, sans-serif;
+  background: #1a1a2e;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  padding: 20px;
+}
+
+/* Phone frame */
+.phone {
+  width: 380px;
+  background: #0f0f1a;
+  border-radius: 40px;
+  padding: 16px;
+  box-shadow: 0 20px 60px rgba(0,0,0,.5);
+  border: 1px solid #2a2a4a;
+}
+
+.phone-inner {
+  background: #0f0f1a;
+  border-radius: 28px;
+  overflow: hidden;
+}
+
+/* Status bar */
+.statusbar {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 20px 8px;
+  color: #888;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* Header */
+.app-header {
+  background: linear-gradient(135deg, #1a1a2e, #2a1a3e);
+  padding: 20px 20px 16px;
+}
+.app-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #f0c040;
+  letter-spacing: 1px;
+}
+.app-sub {
+  font-size: 11px;
+  color: #666;
+  margin-top: 2px;
+}
+
+/* Quick stats */
+.quick-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  padding: 16px 20px;
+}
+.qs-item {
+  background: #1a1a2e;
+  border: 1px solid #2a2a4a;
+  border-radius: 12px;
+  padding: 12px 8px;
+  text-align: center;
+}
+.qs-value {
+  font-size: 20px;
+  font-weight: 800;
+  color: #f0c040;
+}
+.qs-label {
+  font-size: 9px;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin-top: 4px;
+}
+
+/* Nav tabs */
+.nav-tabs {
+  display: flex;
+  border-bottom: 1px solid #2a2a4a;
+  padding: 0 8px;
+}
+.nav-tab {
+  flex: 1;
+  text-align: center;
+  padding: 14px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  border-bottom: 2px solid transparent;
+  cursor: default;
+}
+.nav-tab.active {
+  color: #f0c040;
+  border-bottom-color: #f0c040;
+}
+
+/* Content */
+.content {
+  padding: 16px 20px;
+}
+
+/* Prediction card */
+.pred-card {
+  background: linear-gradient(135deg, #2a1a3e, #1a2a3e);
+  border: 1px solid #3a2a5a;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+}
+.pred-label {
+  font-size: 11px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.pred-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #e0e0e0;
+  margin-top: 4px;
+}
+.pred-digits {
+  font-size: 36px;
+  font-weight: 800;
+  letter-spacing: 8px;
+  color: #f0c040;
+  text-align: center;
+  padding: 12px 0 8px;
+}
+.pred-meta {
+  text-align: center;
+  font-size: 12px;
+  color: #888;
+}
+.pred-meta span { margin: 0 8px; }
+
+/* Market list */
+.market-list {
+  background: #1a1a2e;
+  border: 1px solid #2a2a4a;
+  border-radius: 12px;
+  overflow: hidden;
+}
+.market-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid #2a2a4a;
+  font-size: 13px;
+}
+.market-item:last-child { border-bottom: none; }
+.market-name { color: #ccc; font-weight: 500; }
+.market-status {
+  color: #4caf50;
+  font-size: 11px;
+}
+.market-status.offline { color: #f44; }
+
+/* Bottom nav */
+.bottom-nav {
+  display: flex;
+  border-top: 1px solid #2a2a4a;
+  padding: 8px;
+}
+.nav-item {
+  flex: 1;
+  text-align: center;
+  padding: 8px;
+  font-size: 10px;
+  color: #666;
+  cursor: default;
+}
+.nav-item.active { color: #f0c040; }
+.nav-icon { font-size: 20px; display: block; margin-bottom: 2px; }
+
+/* Action button */
+.fab {
+  width: 56px;
+  height: 56px;
+  background: #f0c040;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 8px;
+  font-size: 24px;
+  color: #1a1a2e;
+  font-weight: bold;
+  box-shadow: 0 4px 16px rgba(240,192,64,.3);
+}
+
+/* Orphan section */
+.section-title {
+  font-size: 13px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 16px 0 8px;
+}
+</style>
+</head>
+<body>
+
+<div class="phone">
+<div class="phone-inner">
+
+  <!-- Status Bar -->
+  <div class="statusbar">
+    <span>12:00</span>
+    <span>TGQ</span>
+  </div>
+
+  <!-- Header -->
+  <div class="app-header">
+    <div class="app-title">TGQ</div>
+    <div class="app-sub">Trust Generator Qualitynumbers</div>
+  </div>
+
+  <!-- Quick Stats -->
+  <div class="quick-stats">
+    <div class="qs-item">
+      <div class="qs-value">2</div>
+      <div class="qs-label">Engines</div>
+    </div>
+    <div class="qs-item">
+      <div class="qs-value">47</div>
+      <div class="qs-label">Markets</div>
+    </div>
+    <div class="qs-item">
+      <div class="qs-value">90</div>
+      <div class="qs-label">Tests</div>
+    </div>
+  </div>
+
+  <!-- Nav Tabs -->
+  <div class="nav-tabs">
+    <div class="nav-tab active">Prediksi</div>
+    <div class="nav-tab">Market</div>
+    <div class="nav-tab">History</div>
+    <div class="nav-tab">Settings</div>
+  </div>
+
+  <!-- Content -->
+  <div class="content">
+
+    <!-- Prediction -->
+    <div class="pred-card">
+      <div class="pred-label">Prediksi Terkini</div>
+      <div class="pred-title">TOTO MACAU · Periode 13771</div>
+      <div class="pred-digits">0 3 9 1 4</div>
+      <div class="pred-meta">
+        <span>Backup: 8</span>
+        <span>Confidence: 83%</span>
+      </div>
+    </div>
+
+    <!-- Quick action -->
+    <div class="pred-card" style="text-align:center;padding:16px">
+      <div class="pred-label">Pilih Pasaran</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;justify-content:center">
+        <span style="background:#2a2a4a;padding:6px 14px;border-radius:20px;font-size:12px;color:#ccc">TOTO MACAU</span>
+        <span style="background:#2a2a4a;padding:6px 14px;border-radius:20px;font-size:12px;color:#ccc">OREGON03</span>
+        <span style="background:#2a2a4a;padding:6px 14px;border-radius:20px;font-size:12px;color:#ccc">OREGON06</span>
+        <span style="background:#2a2a4a;padding:6px 14px;border-radius:20px;font-size:12px;color:#ccc">OREGON09</span>
+        <span style="background:#2a2a4a;padding:6px 14px;border-radius:20px;font-size:12px;color:#ccc">OREGON12</span>
+      </div>
+    </div>
+
+    <!-- Named Markets -->
+    <div class="section-title">Named Markets (33)</div>
+    <div class="market-list">
+      <div class="market-item"><span class="market-name">4D TOTO MACAU</span><span class="market-status">●</span></div>
+      <div class="market-item"><span class="market-name">OREGON03</span><span class="market-status">●</span></div>
+      <div class="market-item"><span class="market-name">BULLSEYE</span><span class="market-status">●</span></div>
+      <div class="market-item"><span class="market-name">PCSO</span><span class="market-status">●</span></div>
+      <div class="market-item" style="border:none"><span class="market-name">+29 lainnya</span><span class="market-status">●</span></div>
+    </div>
+
+    <!-- Orphan Markets -->
+    <div class="section-title">Orphan Markets (14)</div>
+    <div class="market-list">
+      <div class="market-item"><span class="market-name">HOKIdraw</span><span class="market-status">●</span></div>
+      <div class="market-item"><span class="market-name">huahin0100</span><span class="market-status">●</span></div>
+      <div class="market-item"><span class="market-name">cambodialotto</span><span class="market-status">●</span></div>
+      <div class="market-item"><span class="market-name">sydneylotto</span><span class="market-status">●</span></div>
+      <div class="market-item" style="border:none"><span class="market-name">+10 lainnya</span><span class="market-status">●</span></div>
+    </div>
+  </div>
+
+  <!-- Bottom Nav -->
+  <div class="bottom-nav">
+    <div class="nav-item active">
+      <span class="nav-icon">🏠</span>
+      Home
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">🔮</span>
+      Prediksi
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">📊</span>
+      Market
+    </div>
+    <div class="nav-item">
+      <span class="nav-icon">⚙️</span>
+      Settings
+    </div>
+  </div>
+
+</div>
+</div>
+
+</body>
+</html>

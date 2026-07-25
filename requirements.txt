@@ -1,0 +1,9 @@
+# Luna Core dependencies
+fastapi
+uvicorn
+pydantic
+python-dotenv
+pyyaml
+markdown
+rich
+orjson

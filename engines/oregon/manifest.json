@@ -1,0 +1,9 @@
+{
+  "name": "oregon",
+  "version": "1.0",
+  "type": "prediction",
+  "rule": "oregon_rules",
+  "target": ["03", "06", "09", "12"],
+  "module": "oregon.oregon_engine",
+  "class": "OregonEngine"
+}
