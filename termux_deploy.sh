@@ -1,15 +1,17 @@
 #!/data/data/com.termux/files/usr/bin/bash
 # ============================================================
-#  TGQ — Termux Native VPS Deploy (root only)
-#  Install semua deps + setup VPS pribadi di HP rooted
+#  TGQ — Termux VPS Deploy
+#  Install semua deps + setup VPS pribadi di HP
 #  Bisa jalan standalone via curl ke GitHub:
 #
-#    curl -sL https://raw.githubusercontent.com/22112020/22112020.github.io/master/termux_deploy.sh | su -c bash
+#    curl -sL https://raw.githubusercontent.com/22112020/22112020.github.io/master/termux_deploy.sh | bash
 #
 #  Atau:
-#    su -c bash termux_deploy.sh
+#    bash termux_deploy.sh
 # ============================================================
-#  Cocok untuk: rooted Android + mini cooling fan + 24/7 VPS
+#  Cocok untuk: Android + mini cooling fan + 24/7 VPS
+#  Root  = full VPS (SSH, Nginx, auto-boot)
+#  Non-root = partial (TGQ server + Python deps)
 # ============================================================
 
 set -euo pipefail
@@ -29,25 +31,15 @@ section() { echo; echo -e "${CYAN}═══════════════�
 
 echo -e "${CYAN}"
 echo "  ╔══════════════════════════════════════════════════╗"
-echo "  ║     TGQ — Termux Native VPS Deploy              ║"
-echo "  ║     Rooted Android | No Battery | Mini Fan       ║"
+echo "  ║     TGQ — Termux VPS Deploy                     ║"
+echo "  ║     Android | No Battery | Mini Fan              ║"
 echo "  ╚══════════════════════════════════════════════════╝"
 echo -e "${NC}"
 
 # ============================================================
-# 0. ROOT CHECK
+# 0. ENVIRONMENT CHECK
 # ============================================================
-section "0/8: ROOT CHECK"
-
-if [ "$(id -u)" -ne 0 ]; then
-    err "Harus jalan sebagai root! Gunakan: su -c bash termux_deploy.sh"
-    echo ""
-    echo "  Alternatif dari GitHub (tanpa download manual):"
-    echo "    curl -sL https://raw.githubusercontent.com/22112020/22112020.github.io/master/termux_deploy.sh | su -c bash"
-    echo ""
-    exit 1
-fi
-info "Root user confirmed"
+section "0/8: ENVIRONMENT CHECK"
 
 if [ ! -d /data/data/com.termux ]; then
     err "Bukan lingkungan Termux!"
@@ -56,6 +48,15 @@ fi
 info "Termux environment detected"
 
 PREFIX="/data/data/com.termux/files/usr"
+IS_ROOT=false
+if [ "$(id -u)" -eq 0 ]; then
+    IS_ROOT=true
+    PKG_MGR="apt"
+    info "Mode: Root (full VPS)"
+else
+    PKG_MGR="pkg"
+    info "Mode: Non-root (TGQ server only)"
+fi
 
 # ============================================================
 # 0b. SETUP TGQ DIRECTORY
@@ -94,7 +95,7 @@ info "Working directory: $APP_DIR"
 section "1/8: SYSTEM UPDATE"
 
 info "Updating packages..."
-apt update -qq && apt upgrade -y -qq
+$PKG_MGR update -qq && $PKG_MGR upgrade -y -qq
 info "System updated"
 
 # ============================================================
@@ -106,24 +107,32 @@ PKGS=(
     python3
     clang
     git
-    openssh
-    screen
     nodejs
+    screen
+    curl
+    wget
+    htop
+)
+
+ROOT_PKGS=(
+    openssh
     nginx
     termux-services
     termux-exec
     openssl-tool
-    curl
-    wget
-    htop
     nmon
     tsu
 )
 
-for pkg in "${PKGS[@]}"; do
+ALL_PKGS=("${PKGS[@]}")
+if $IS_ROOT; then
+    ALL_PKGS+=("${ROOT_PKGS[@]}")
+fi
+
+for pkg in "${ALL_PKGS[@]}"; do
     if ! which "$pkg" &>/dev/null && ! dpkg -s "$pkg" &>/dev/null 2>&1; then
         warn "Installing $pkg..."
-        apt install -y "$pkg" -qq 2>/dev/null || true
+        $PKG_MGR install -y "$pkg" -qq 2>/dev/null || true
     else
         info "$pkg already installed"
     fi
@@ -156,15 +165,16 @@ python3 -c "import fastapi, uvicorn, pydantic, yaml, markdown, rich, orjson; pri
 info "Python packages OK"
 
 # ============================================================
-# 4. SETUP SSH
+# 4. SETUP SSH (root only)
 # ============================================================
-section "4/8: SSH SERVER"
+if $IS_ROOT; then
+section "4/8: SSH SERVER (root only)"
 
 SSHD_CONFIG="$PREFIX/etc/ssh/sshd_config"
 
 if [ ! -f "$SSHD_CONFIG" ]; then
     warn "sshd_config not found, installing openssh..."
-    apt install -y openssh -qq
+    $PKG_MGR install -y openssh -qq
 fi
 
 cp "$SSHD_CONFIG" "${SSHD_CONFIG}.bak" 2>/dev/null || true
@@ -205,11 +215,15 @@ else
         info "SSH started on port $SSH_PORT"
     fi
 fi
+else
+    warn "Skip SSH setup (butuh root)"
+fi
 
 # ============================================================
-# 5. SETUP NGINX (reverse proxy TGQ)
+# 5. SETUP NGINX (root only)
 # ============================================================
-section "5/8: NGINX REVERSE PROXY"
+if $IS_ROOT; then
+section "5/8: NGINX REVERSE PROXY (root only)"
 
 NGINX_CONF="$PREFIX/etc/nginx/conf.d/tgq.conf"
 mkdir -p "$PREFIX/etc/nginx/conf.d"
@@ -243,6 +257,9 @@ NGINXEOF
 info "Nginx config created: $NGINX_CONF"
 
 nginx -t 2>&1 | head -1 && info "Nginx config OK" || warn "Nginx config error"
+else
+    warn "Skip Nginx setup (butuh root)"
+fi
 
 # ============================================================
 # 6. SETUP CLOUDFLARED TUNNEL (opsional)
@@ -293,13 +310,14 @@ fi
 # ============================================================
 # 8. SETUP AUTO-BOOT & START SERVICES
 # ============================================================
-section "8/8: AUTO-BOOT & START SERVICES"
+section "8/8: START SERVICES"
 
-# --- Termux:Boot ---
-BOOT_DIR="$HOME/.termux/boot"
-mkdir -p "$BOOT_DIR"
+# --- Termux:Boot (root only) ---
+if $IS_ROOT; then
+    BOOT_DIR="$HOME/.termux/boot"
+    mkdir -p "$BOOT_DIR"
 
-cat > "$BOOT_DIR/tgq.sh" << 'BOOTSCRIPT'
+    cat > "$BOOT_DIR/tgq.sh" << 'BOOTSCRIPT'
 #!/data/data/com.termux/files/usr/bin/bash
 # TGQ — Auto-start VPS services (diinstall oleh termux_deploy.sh)
 termux-wake-lock
@@ -319,25 +337,28 @@ if [ -f "$APP_DIR/run_server.sh" ]; then
 fi
 BOOTSCRIPT
 
-chmod +x "$BOOT_DIR/tgq.sh"
-info "Boot script installed: $BOOT_DIR/tgq.sh"
-echo "  Pastikan Termux:Boot terinstall dari F-Droid"
-
-# --- Start services ---
-title "START SERVICES"
-
-# Start SSH
-if ! pgrep sshd >/dev/null 2>&1; then
-    sshd -p "$SSH_PORT" 2>/dev/null && info "SSH started on port $SSH_PORT" || warn "SSH start failed"
-else
-    info "SSH already running on port $SSH_PORT"
+    chmod +x "$BOOT_DIR/tgq.sh"
+    info "Boot script installed: $BOOT_DIR/tgq.sh"
+    echo "  Pastikan Termux:Boot terinstall dari F-Droid"
+    echo ""
 fi
 
-# Start Nginx
-if pgrep nginx >/dev/null 2>&1; then
-    info "Nginx already running"
-else
-    nginx 2>/dev/null && info "Nginx started" || warn "Nginx start failed (check config)"
+# Start SSH (root only)
+if $IS_ROOT; then
+    if ! pgrep sshd >/dev/null 2>&1; then
+        sshd -p "$SSH_PORT" 2>/dev/null && info "SSH started on port $SSH_PORT" || warn "SSH start failed"
+    else
+        info "SSH already running on port $SSH_PORT"
+    fi
+fi
+
+# Start Nginx (root only)
+if $IS_ROOT; then
+    if pgrep nginx >/dev/null 2>&1; then
+        info "Nginx already running"
+    else
+        nginx 2>/dev/null && info "Nginx started" || warn "Nginx start failed (check config)"
+    fi
 fi
 
 # Start TGQ server
@@ -362,27 +383,41 @@ section "DEPLOY COMPLETE"
 echo ""
 echo -e "${GREEN}"
 echo "  ┌─────────────────────────────────────────────────────┐"
-echo "  │  TGQ — Termux VPS Siap!                            │"
+if $IS_ROOT; then
+echo "  │  TGQ — Termux VPS Siap! (ROOT mode)                 │"
+else
+echo "  │  TGQ — Termux VPS Siap! (non-root mode)            │"
+fi
 echo "  ├─────────────────────────────────────────────────────┤"
 echo "  │  TGQ API    : http://localhost:8443                 │"
+if $IS_ROOT; then
 echo "  │              : http://localhost/ (via nginx)        │"
-echo "  │  UI Web     : http://localhost/static/              │"
+fi
+echo "  │  UI Web     : http://localhost:8443/static/         │"
+if $IS_ROOT; then
 echo "  │  SSH        : ssh -p $SSH_PORT root@<IP_HP>        │"
-echo "  │  Nginx      : $PREFIX/etc/nginx/conf.d/tgq.conf  │"
-echo "  │  Boot       : $BOOT_DIR/tgq.sh                    │"
+echo "  │  Boot       : $HOME/.termux/boot/tgq.sh            │"
+fi
 echo "  │  Logs       : $APP_DIR/logs/                       │"
 echo "  ├─────────────────────────────────────────────────────┤"
+if $IS_ROOT; then
 echo "  │  PENTING:                                          │"
 echo "  │  1. Tambahkan SSH public key di ~/.ssh/authorized_keys │"
 echo "  │  2. Untuk akses publik: cloudflared tunnel          │"
 echo "  │  3. Cek IP HP: ifconfig atau ip addr                │"
 echo "  │  4. Pastikan mini fan menyala                      │"
+else
+echo "  │  CATATAN:                                           │"
+echo "  │  Jalankan dengan su (root) untuk fitur lengkap:     │"
+echo "  │  - SSH server, Nginx, auto-boot Termux              │"
+echo "  │  - cloudflared tunnel publik                        │"
+fi
 echo "  └─────────────────────────────────────────────────────┘"
 echo -e "${NC}"
 
 echo ""
 title "PORT CHECK"
-for port in 80 8443 8022; do
+for port in 8443; do
     if grep -q ":$port " /proc/net/tcp 2>/dev/null || grep -q ":$port " /proc/net/tcp6 2>/dev/null; then
         info "Port $port OPEN"
     else
@@ -390,9 +425,16 @@ for port in 80 8443 8022; do
     fi
 done
 
-echo ""
-echo -e "${YELLOW} Jangan lupa tambahkan SSH public key!${NC}"
-echo "    echo 'ssh-ed25519 AAAA...' >> ~/.ssh/authorized_keys"
+if $IS_ROOT; then
+    for port in 80 8022; do
+        if grep -q ":$port " /proc/net/tcp 2>/dev/null || grep -q ":$port " /proc/net/tcp6 2>/dev/null; then
+            info "Port $port OPEN"
+        else
+            info "Port $port — check manually"
+        fi
+    done
+fi
+
 echo ""
 
 # ============================================================
