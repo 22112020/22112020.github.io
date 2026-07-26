@@ -2,16 +2,23 @@
 # ============================================================
 #  TGQ — Termux Native VPS Deploy (root only)
 #  Install semua deps + setup VPS pribadi di HP rooted
-#  Cocok untuk: rooted Android + mini cooling fan + 24/7
+#  Bisa jalan standalone via curl ke GitHub:
+#
+#    curl -sL https://raw.githubusercontent.com/22112020/22112020.github.io/master/termux_deploy.sh | su -c bash
+#
+#  Atau:
+#    su -c bash termux_deploy.sh
 # ============================================================
-# Cara pakai:
-#   1. chmod +x termux_deploy.sh
-#   2. su -c bash termux_deploy.sh
+#  Cocok untuk: rooted Android + mini cooling fan + 24/7 VPS
 # ============================================================
 
 set -euo pipefail
 
-APP_DIR="$(cd "$(dirname "$0")" && pwd)"
+# Konfigurasi
+TGQ_REPO="https://github.com/22112020/22112020.github.io.git"
+TGQ_BRANCH="master"
+TGQ_DIR="${TGQ_DIR:-$HOME/tgq}"
+SSH_PORT=8022
 
 GREEN='\033[0;32m'; YELLOW='\033[1;33m'; RED='\033[0;31m'; CYAN='\033[0;36m'; NC='\033[0m'
 info()  { echo -e "${GREEN}[✓]${NC} $1"; }
@@ -34,6 +41,10 @@ section "0/8: ROOT CHECK"
 
 if [ "$(id -u)" -ne 0 ]; then
     err "Harus jalan sebagai root! Gunakan: su -c bash termux_deploy.sh"
+    echo ""
+    echo "  Alternatif dari GitHub (tanpa download manual):"
+    echo "    curl -sL https://raw.githubusercontent.com/22112020/22112020.github.io/master/termux_deploy.sh | su -c bash"
+    echo ""
     exit 1
 fi
 info "Root user confirmed"
@@ -43,6 +54,39 @@ if [ ! -d /data/data/com.termux ]; then
     exit 1
 fi
 info "Termux environment detected"
+
+PREFIX="/data/data/com.termux/files/usr"
+
+# ============================================================
+# 0b. SETUP TGQ DIRECTORY
+# ============================================================
+section "0b/8: TGQ DIRECTORY"
+
+SCRIPT_SOURCE="$(cd "$(dirname "$0")" 2>/dev/null && pwd || echo "")"
+
+# Deteksi apakah sudah di dalam TGQ repo atau perlu clone
+if [ -f "$SCRIPT_SOURCE/run_server.sh" ] && [ -f "$SCRIPT_SOURCE/api/main.py" ]; then
+    TGQ_DIR="$SCRIPT_SOURCE"
+    info "Script berjalan dari dalam TGQ repo: $TGQ_DIR"
+elif [ -d "$TGQ_DIR/.git" ]; then
+    info "TGQ sudah ada di $TGQ_DIR, update repo..."
+    cd "$TGQ_DIR"
+    git pull origin "$TGQ_BRANCH" 2>/dev/null || true
+elif [ -d "$TGQ_DIR" ] && [ -f "$TGQ_DIR/run_server.sh" ]; then
+    info "TGQ sudah ada di $TGQ_DIR (tanpa .git)"
+elif [ -f "$TGQ_DIR" ]; then
+    err "$TGQ_DIR bukan direktori"
+    exit 1
+else
+    warn "TGQ belum ada di $TGQ_DIR — cloning dari GitHub..."
+    mkdir -p "$TGQ_DIR"
+    git clone --depth 1 -b "$TGQ_BRANCH" "$TGQ_REPO" "$TGQ_DIR" 2>&1
+    info "TGQ cloned ke $TGQ_DIR"
+fi
+
+cd "$TGQ_DIR"
+APP_DIR="$TGQ_DIR"
+info "Working directory: $APP_DIR"
 
 # ============================================================
 # 1. SYSTEM UPDATE
@@ -108,17 +152,7 @@ else
     python3 -m pip install fastapi uvicorn pydantic python-dotenv pyyaml markdown rich orjson -q
 fi
 
-python3 -c "
-import sys
-pkgs = ['fastapi','uvicorn','pydantic','dotenv','yaml','markdown','rich','orjson']
-missing = [p for p in pkgs if __import__(p, globals(), locals(), [], 0) is None]
-if missing:
-    print(f'[!] Missing: {missing}')
-    sys.exit(1)
-else:
-    print('[OK] All Python packages installed')
-" 2>&1 || python3 -c "import fastapi, uvicorn, pydantic, yaml, markdown, rich, orjson; print('[OK] All Python packages verified')"
-
+python3 -c "import fastapi, uvicorn, pydantic, yaml, markdown, rich, orjson; print('[OK] All Python packages verified')" 2>&1
 info "Python packages OK"
 
 # ============================================================
@@ -126,7 +160,6 @@ info "Python packages OK"
 # ============================================================
 section "4/8: SSH SERVER"
 
-SSH_PORT=8022
 SSHD_CONFIG="$PREFIX/etc/ssh/sshd_config"
 
 if [ ! -f "$SSHD_CONFIG" ]; then
@@ -157,8 +190,8 @@ if [ ! -f "$HOME/.ssh/authorized_keys" ]; then
     chmod 600 "$HOME/.ssh/authorized_keys"
     warn "~/.ssh/authorized_keys kosong!"
     echo ""
-    echo "  📌 Tambahkan public key-mu:"
-    echo "    echo 'ssh-rsa AAA...' >> ~/.ssh/authorized_keys"
+    echo "  Tambahkan public key SSH-mu:"
+    echo "    echo 'ssh-ed25519 AAAA...' >> ~/.ssh/authorized_keys"
     echo "    chmod 600 ~/.ssh/authorized_keys"
     echo ""
 fi
@@ -209,7 +242,6 @@ server {
 NGINXEOF
 info "Nginx config created: $NGINX_CONF"
 
-# Test config
 nginx -t 2>&1 | head -1 && info "Nginx config OK" || warn "Nginx config error"
 
 # ============================================================
@@ -229,11 +261,11 @@ esac
 if which cloudflared &>/dev/null; then
     info "cloudflared already installed: $(cloudflared version 2>/dev/null | head -1)"
 else
-    warn "Installing cloudflared ($ARCH)..."
+    warn "Installing cloudflared ($CF_ARCH)..."
     curl -sL "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-$CF_ARCH" -o "$PREFIX/bin/cloudflared"
     chmod +x "$PREFIX/bin/cloudflared"
     if cloudflared version &>/dev/null; then
-        info "cloudflared installed: $(cloudflared version 2>/dev/null | head -1)"
+        info "cloudflared installed"
     else
         warn "cloudflared install failed — install manual nanti"
     fi
@@ -289,7 +321,7 @@ BOOTSCRIPT
 
 chmod +x "$BOOT_DIR/tgq.sh"
 info "Boot script installed: $BOOT_DIR/tgq.sh"
-echo "  ⚠  Pastikan Termux:Boot terinstall dari F-Droid"
+echo "  Pastikan Termux:Boot terinstall dari F-Droid"
 
 # --- Start services ---
 title "START SERVICES"
@@ -344,24 +376,22 @@ echo "  │  PENTING:                                          │"
 echo "  │  1. Tambahkan SSH public key di ~/.ssh/authorized_keys │"
 echo "  │  2. Untuk akses publik: cloudflared tunnel          │"
 echo "  │  3. Cek IP HP: ifconfig atau ip addr                │"
-echo "  │  4. Pastikan mini fan menyala 🔥                   │"
+echo "  │  4. Pastikan mini fan menyala                      │"
 echo "  └─────────────────────────────────────────────────────┘"
 echo -e "${NC}"
 
-# Cek port yang terbuka
 echo ""
 title "PORT CHECK"
 for port in 80 8443 8022; do
-    if ss -tlnp | grep -q ":$port "; then
-        SERVICE=$(ss -tlnp | grep ":$port " | grep -oP 'users:\(\(\K[^)]+' || echo "unknown")
-        info "Port $port OPEN ($SERVICE)"
+    if grep -q ":$port " /proc/net/tcp 2>/dev/null || grep -q ":$port " /proc/net/tcp6 2>/dev/null; then
+        info "Port $port OPEN"
     else
         warn "Port $port CLOSED"
     fi
 done
 
 echo ""
-echo -e "${YELLOW}⚠  Jangan lupa tambahkan SSH public key!${NC}"
+echo -e "${YELLOW} Jangan lupa tambahkan SSH public key!${NC}"
 echo "    echo 'ssh-ed25519 AAAA...' >> ~/.ssh/authorized_keys"
 echo ""
 
