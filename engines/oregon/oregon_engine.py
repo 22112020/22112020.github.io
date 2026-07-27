@@ -68,14 +68,14 @@ class OregonEngine(BaseEngine):
         # Step 4: Select main digits (top 5)
         main_digits = ranked_digits[:5]
         
-        # Step 5: Select backup digit (next after top 5)
-        backup_digits = [ranked_digits[5]] if len(ranked_digits) > 5 else ["3"]
-        
-        # Step 6: Apply history elimination
+        # Step 5: Apply history elimination
         eliminated_digits = self._apply_history_elimination(main_digits, history)
         
         # If elimination removed main digits, substitute
         final_main = self._substitute_eliminated_digits(main_digits, eliminated_digits, ranked_digits)
+        
+        # Step 6: Select backup digit — must be different from all main digits
+        backup_digits = self._select_backup_digit(final_main, ranked_digits)
         
         # Set prediction
         result.set_prediction(
@@ -225,6 +225,22 @@ class OregonEngine(BaseEngine):
                 break
         
         return final[:5]  # Ensure exactly 5 digits
+
+    def _select_backup_digit(self, main_digits: List[str],
+                             ranked_digits: List[str]) -> List[str]:
+        """Select backup digit that is different from all main digits.
+        
+        Args:
+            main_digits: Final main digits (after elimination)
+            ranked_digits: All digits ranked by frequency
+            
+        Returns:
+            List with single backup digit (always different from main)
+        """
+        for digit in ranked_digits:
+            if digit not in main_digits:
+                return [digit]
+        return ["3"]  # Fallback — should never reach here with 10 digits
 
     def _calculate_confidence(self, frequency: Dict[str, int], 
                              history: List[Dict]) -> float:

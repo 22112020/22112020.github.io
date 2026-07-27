@@ -1,0 +1,9 @@
+{
+  "name": "historical_trend",
+  "version": "1.0",
+  "type": "prediction",
+  "rule": "historical_trend",
+  "target": ["all"],
+  "module": "historical_trend.historical_trend_engine",
+  "class": "HistoricalTrendEngine"
+}

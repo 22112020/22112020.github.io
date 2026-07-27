@@ -2,18 +2,18 @@
   TGQ.init();
 
   const NAV_ITEMS = [
-    { route: 'dashboard', icon: 'img/icons/dashboard.svg', label: 'Dashboard' },
-    { route: 'markets', icon: 'img/icons/book_database.svg', label: 'Markets' },
-    { route: 'analysis', icon: 'img/icons/chart_multiple.svg', label: 'Analysis' },
-    { route: 'results', icon: 'img/icons/clipboard_data_bar.svg', label: 'Results' },
-    { route: 'input', icon: 'img/icons/edit.svg', label: 'Input' },
-    { route: 'about', icon: 'img/icons/info.svg', label: 'About' },
+    { route: 'dashboard', icon: 'dashboard', label: 'Dashboard' },
+    { route: 'markets', icon: 'grid_view', label: 'Markets' },
+    { route: 'analysis', icon: 'analytics', label: 'Analysis' },
+    { route: 'results', icon: 'history', label: 'Results' },
+    { route: 'input', icon: 'edit_note', label: 'Input' },
+    { route: 'about', icon: 'info', label: 'About' },
   ];
 
   function renderNav(container, isBottom) {
     container.innerHTML = NAV_ITEMS.map(item => `
       <a class="${isBottom ? 'bottom-nav-item' : 'nav-item'}" href="#/${item.route}" data-route="${item.route}">
-        <img src="${item.icon}" alt="${item.label} Icon" class="nav-icon">
+        <span class="material-icons">${item.icon}</span>
         ${isBottom ? `<span>${item.label}</span>` : item.label}
       </a>
     `).join('');
@@ -40,7 +40,7 @@
       label.textContent = 'Online';
       uptime.textContent = s.uptime ? `Uptime: ${s.uptime}` : 'Server aktif';
     } catch {
-      dot.className = 'status-dot';
+      dot.className = 'status-dot offline';
       label.textContent = 'Offline';
       uptime.textContent = '';
     }
@@ -60,21 +60,4 @@
       document.getElementById('sidebar').classList.remove('open');
     }
   });
-
-  // Add CSS for nav icons
-  const style = document.createElement('style');
-  style.textContent = `
-    .nav-icon {
-      width: 24px;
-      height: 24px;
-      margin-right: 0.75rem;
-      filter: brightness(0) invert(1) drop-shadow(0 0 4px rgba(255, 107, 157, 0.5));
-    }
-    
-    .bottom-nav-item .nav-icon {
-      display: block;
-      margin: 0 auto 0.25rem;
-    }
-  `;
-  document.head.appendChild(style);
 })();

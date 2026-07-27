@@ -3,12 +3,15 @@ import shutil
 from pathlib import Path
 from core.market_sync import MarketSync
 
+TEST_ROOT = Path(__file__).resolve().parent
+PROJECT_ROOT = TEST_ROOT.parent
+
 class TestMarketSync(unittest.TestCase):
     def setUp(self):
         # Create a temporary directory for testing within project
-        self.test_dir = Path("/mnt/d/Alfian/Togelku/tests/.temp_market_sync")
+        self.test_dir = TEST_ROOT / ".temp_market_sync"
         self.project_root = self.test_dir / "Togelku"
-        self.project_root.mkdir(exist_ok=True)
+        self.project_root.mkdir(parents=True, exist_ok=True)
         
         # Create data_harian directory
         self.data_harian_dir = self.project_root / "data_harian"

@@ -3,13 +3,14 @@ import shutil
 from pathlib import Path
 from core.registry import LunaRegistry, RegistryError, EngineLoadError
 
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 class TestLunaRegistry(unittest.TestCase):
     """Test LunaRegistry class."""
 
     def setUp(self):
         # Use actual engines directory in the project
-        self.engines_dir = Path("/mnt/d/Alfian/Togelku/engines")
+        self.engines_dir = PROJECT_ROOT / "engines"
         self.engines_dir.mkdir(exist_ok=True)
         
         # Create valid test engine

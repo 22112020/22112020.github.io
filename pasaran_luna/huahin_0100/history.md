@@ -1,2 +1,0 @@
-History Nomor HUAHIN 0100
-23-07-2026 01:00:00 Thursday 1990 0008

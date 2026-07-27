@@ -1,116 +1,251 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>TGQ — Trust Generator Qualitynumbers</title>
-<link rel="stylesheet" href="css/style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>TGQ — Togel Prediction</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="css/main.css" rel="stylesheet">
+  <link rel="icon" type="image/svg+xml" href="img/tgq-logo.svg">
+  <style>
+    :root {
+      --bg-darkest: #0a0008;
+      --bg-dark: #1a0010;
+      --maroon-deep: #4a0014;
+      --maroon-primary: #800020;
+      --maroon-bright: #a50030;
+      --pink-accent: #ff6b9d;
+      --pink-glow: #ff4d8b;
+      --text-light: #ffffff;
+      --text-soft: rgba(255, 255, 255, 0.85);
+      --text-muted: rgba(255, 255, 255, 0.6);
+      --success-color: #4caf50;
+      --error-color: #f44336;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, var(--bg-darkest) 0%, var(--bg-dark) 30%, var(--maroon-deep) 70%, var(--maroon-primary) 100%);
+      background-attachment: fixed;
+      color: var(--text-light);
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: 
+        radial-gradient(circle at 20% 20%, rgba(255, 77, 139, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 80% 80%, rgba(165, 0, 48, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(128, 0, 32, 0.1) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .sidebar {
+      background: linear-gradient(180deg, rgba(74, 0, 20, 0.8) 0%, rgba(26, 0, 16, 0.9) 100%);
+      backdrop-filter: blur(20px);
+      border-right: 1px solid rgba(255, 107, 157, 0.2);
+      box-shadow: 2px 0 16px rgba(0, 0, 0, 0.5);
+    }
+
+    .sidebar-header {
+      border-bottom: 1px solid rgba(255, 107, 157, 0.2);
+    }
+
+    .sidebar-logo {
+      filter: brightness(0) invert(1) drop-shadow(0 0 8px rgba(255, 107, 157, 0.6));
+    }
+
+    .brand-name {
+      color: var(--text-light);
+    }
+
+    .brand-sub {
+      color: var(--text-muted);
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      padding: 0.75rem 1.5rem;
+      margin: 0.25rem 0;
+      border-radius: 8px;
+      transition: all 0.3s ease;
+      color: var(--text-soft);
+    }
+
+    .nav-item:hover {
+      background: rgba(255, 107, 157, 0.1);
+      color: var(--text-light);
+    }
+
+    .nav-item.active {
+      background: linear-gradient(90deg, rgba(128, 0, 32, 0.6), rgba(255, 107, 157, 0.3));
+      color: var(--text-light);
+      border-right: 3px solid var(--pink-accent);
+    }
+
+    .nav-icon {
+      width: 24px;
+      height: 24px;
+      margin-right: 0.75rem;
+      filter: brightness(0) invert(1) drop-shadow(0 0 4px rgba(255, 107, 157, 0.5));
+    }
+
+    .sidebar-footer {
+      border-top: 1px solid rgba(255, 107, 157, 0.2);
+      padding: 1rem 1.5rem;
+    }
+
+    .server-status {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--error-color);
+      animation: pulse 2s infinite;
+    }
+
+    .status-dot.online {
+      background: var(--success-color);
+      animation: pulse-success 2s infinite;
+    }
+
+    .server-uptime {
+      font-family: 'Courier New', monospace;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      letter-spacing: 0.5px;
+    }
+
+    .main-content {
+      background: rgba(0, 0, 0, 0.2);
+      backdrop-filter: blur(10px);
+    }
+
+    .loading-overlay {
+      background: rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(5px);
+    }
+
+    .page {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 12px;
+      padding: 1.5rem;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 107, 157, 0.1);
+    }
+
+    .bottom-nav {
+      background: linear-gradient(180deg, rgba(74, 0, 20, 0.8) 0%, rgba(26, 0, 16, 0.9) 100%);
+      backdrop-filter: blur(20px);
+      border-top: 1px solid rgba(255, 107, 157, 0.2);
+    }
+
+    .bottom-nav-item {
+      color: var(--text-soft);
+    }
+
+    .bottom-nav-item.active {
+      color: var(--pink-accent);
+    }
+
+    .bottom-nav-item .nav-icon {
+      display: block;
+      margin: 0 auto 0.25rem;
+    }
+
+    /* Animations */
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(244, 67, 54, 0.4);
+      }
+      70% {
+        box-shadow: 0 0 0 10px rgba(244, 67, 54, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(244, 67, 54, 0);
+      }
+    }
+
+    @keyframes pulse-success {
+      0% {
+        box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4);
+      }
+      70% {
+        box-shadow: 0 0 0 10px rgba(76, 175, 80, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 1024px) {
+      .sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+      }
+
+      .sidebar.open {
+        transform: translateX(0);
+      }
+    }
+  </style>
 </head>
 <body>
-<nav class="navbar">
-  <div class="nav-brand">TGQ <span class="nav-sub">Trust Generator Qualitynumbers</span></div>
-  <div class="nav-links">
-    <a href="#" class="active" data-page="dashboard">Dashboard</a>
-    <a href="#" data-page="predict">Prediksi</a>
-    <a href="#" data-page="markets">Market</a>
-    <a href="#" data-page="about">About</a>
-  </div>
-</nav>
-
-<div class="container">
-
-  <!-- DASHBOARD -->
-  <section id="page-dashboard" class="page active">
-    <div class="stats-grid" id="statsGrid">
-      <div class="stat-card"><div class="stat-label">Status</div><div class="stat-value" id="sysStatus">—</div></div>
-      <div class="stat-card"><div class="stat-label">Engine</div><div class="stat-value" id="sysEngines">—</div></div>
-      <div class="stat-card"><div class="stat-label">Market</div><div class="stat-value" id="sysMarkets">—</div></div>
-      <div class="stat-card"><div class="stat-label">Sync</div><div class="stat-value" id="sysSync">—</div></div>
-    </div>
-    <div class="card" id="latestPrediction">
-      <div class="card-header">Prediksi Terakhir</div>
-      <div class="card-body" id="latestResult">Belum ada prediksi.</div>
-    </div>
-    <div class="card">
-      <div class="card-header">Akses Cepat</div>
-      <div class="card-body quick-actions">
-        <button class="btn" onclick="predictTotoMacau()">Toto Macau</button>
-        <button class="btn" onclick="predictOregon('OREGON03')">Oregon 03</button>
-        <button class="btn" onclick="predictOregon('OREGON06')">Oregon 06</button>
-        <button class="btn" onclick="predictOregon('OREGON09')">Oregon 09</button>
-        <button class="btn" onclick="predictOregon('OREGON12')">Oregon 12</button>
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <img src="img/tgq-logo.svg" alt="TGQ" class="sidebar-logo">
+      <div>
+        <div class="brand-name">TGQ</div>
+        <span class="brand-sub">Prediction Engine</span>
       </div>
     </div>
-  </section>
-
-  <!-- PREDICT -->
-  <section id="page-predict" class="page">
-    <div class="card">
-      <div class="card-header">Panel Prediksi</div>
-      <div class="card-body">
-        <div class="form-group">
-          <label>Engine</label>
-          <select id="predictEngine">
-            <option value="toto_macau">Toto Macau</option>
-            <option value="oregon">Oregon</option>
-          </select>
-        </div>
-        <div class="form-group">
-          <label>Market</label>
-          <select id="predictMarket">
-            <optgroup label="Toto Macau">
-              <option value="TOTO MACAU">TOTO MACAU</option>
-            </optgroup>
-            <optgroup label="Oregon">
-              <option value="OREGON03">OREGON03</option>
-              <option value="OREGON06">OREGON06</option>
-              <option value="OREGON09">OREGON09</option>
-              <option value="OREGON12">OREGON12</option>
-            </optgroup>
-          </select>
-        </div>
-        <button class="btn btn-primary" onclick="runPrediction()">Jalankan Prediksi</button>
-        <div class="result-box" id="predictResult"></div>
+    <nav class="sidebar-nav" id="sidebarNav"></nav>
+    <div class="sidebar-footer">
+      <div class="server-status">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="statusLabel">Checking...</span>
       </div>
+      <div class="server-uptime" id="uptimeLabel"></div>
     </div>
-  </section>
+  </aside>
 
-  <!-- MARKETS -->
-  <section id="page-markets" class="page">
-    <div class="card">
-      <div class="card-header">All Markets</div>
-      <div class="card-body">
-        <div class="search-bar">
-          <input type="text" id="marketSearch" placeholder="Cari market..." oninput="filterMarkets()">
-        </div>
-        <div class="market-grid" id="marketGrid"></div>
-      </div>
+  <nav class="bottom-nav" id="bottomNav"></nav>
+
+  <main class="main-content" id="mainContent">
+    <div id="loadingOverlay" class="loading-overlay">
+      <div class="spinner"></div>
+      <span>Loading...</span>
     </div>
-  </section>
+    <div class="page active" id="pageContainer"></div>
+  </main>
 
-  <!-- ABOUT -->
-  <section id="page-about" class="page">
-    <div class="card">
-      <div class="card-header">Tentang TGQ</div>
-      <div class="card-body about-content">
-        <p><strong>TGQ</strong> — Trust Generator Qualitynumbers.</p>
-        <p>Modular local analysis engine untuk prediksi lottery. Bagian dari ekosistem Luna Core.</p>
-        <p><strong>Teknologi:</strong> Python 3.12+ · FastAPI · unittest</p>
-        <p><strong>Lokasi:</strong> /mnt/d/Alfian/Togelku/</p>
-        <p><strong>Database:</strong> data_harian/ (source) → pasaran_luna/ (structured)</p>
-        <p><strong>Mesin:</strong> Toto Macau · Oregon</p>
-        <p><strong>Market:</strong> 47 total (33 named + 14 orphan)</p>
-        <p><strong>Tests:</strong> 90 · semua lulus</p>
-      </div>
-    </div>
-  </section>
-
-</div>
-
-<footer class="footer">
-  TGQ v1.0 · Luna Core · 2026
-</footer>
-
-<script src="js/app.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/notyf@3/notyf.min.js"></script>
+  <script src="js/state.js"></script>
+  <script src="js/api.js"></script>
+  <script src="js/router.js"></script>
+  <script src="js/pages/dashboard.js"></script>
+  <script src="js/pages/markets.js"></script>
+  <script src="js/pages/analysis.js"></script>
+  <script src="js/pages/results.js"></script>
+  <script src="js/pages/input.js"></script>
+  <script src="js/pages/about.js"></script>
+  <script src="js/app.js"></script>
 </body>
 </html>

@@ -1,2 +1,0 @@
-History Nomor FLORIDA MID
-23-07-2026 01:30:00 Thursday 1990 4934

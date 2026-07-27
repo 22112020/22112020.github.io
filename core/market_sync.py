@@ -42,6 +42,7 @@ class MarketSync:
         """
         self.project_root = Path(project_root).expanduser().resolve() if project_root else Path.cwd().resolve()
         self.data_harian_dir = self.project_root / "data_harian"
+        self.trash_dir = self.project_root / "trash_dashboard"
         self.pasaran_luna_dir = self.project_root / "pasaran_luna"
         self.index_file = self.pasaran_luna_dir / "index.json"
         self.orphan_slots = self._load_orphan_slots()
@@ -74,22 +75,27 @@ class MarketSync:
         # Ensure pasaran_luna directory exists
         self.pasaran_luna_dir.mkdir(parents=True, exist_ok=True)
         
-        # Find all daily files in data_harian
-        if not self.data_harian_dir.exists():
-            return stats
+        # Collect files from data_harian
+        sources = []
+        if self.data_harian_dir.exists():
+            sources.append(('data_harian', self.data_harian_dir))
         
-        # Process files in chronological order
-        daily_files = sorted(
-            [f for f in self.data_harian_dir.glob("*.md") if self._extract_date_from_filename(f.name)],
-            key=lambda f: self._extract_date_from_filename(f.name)
-        )
+        # Collect files from trash_dashboard
+        if self.trash_dir.exists():
+            sources.append(('trash_dashboard', self.trash_dir))
         
-        for daily_file in daily_files:
-            stats['files_processed'] += 1
-            file_stats = self._process_daily_file(daily_file)
-            stats['markets_updated'] += file_stats['markets_updated']
-            stats['records_added'] += file_stats['records_added']
-            stats['records_skipped'] += file_stats['records_skipped']
+        for source_name, source_dir in sources:
+            daily_files = sorted(
+                [f for f in source_dir.glob("*.md") if self._extract_date_from_filename(f.name)],
+                key=lambda f: self._extract_date_from_filename(f.name)
+            )
+            
+            for daily_file in daily_files:
+                stats['files_processed'] += 1
+                file_stats = self._process_daily_file(daily_file)
+                stats['markets_updated'] += file_stats['markets_updated']
+                stats['records_added'] += file_stats['records_added']
+                stats['records_skipped'] += file_stats['records_skipped']
         
         # Update index.json
         self._update_index()

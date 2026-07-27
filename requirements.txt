@@ -6,4 +6,4 @@ python-dotenv
 pyyaml
 markdown
 rich
-orjson
+

@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>TGQ — UI Preview with FluentUI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-darkest: #0a0008;
+      --bg-dark: #1a0010;
+      --maroon-deep: #4a0014;
+      --maroon-primary: #800020;
+      --maroon-bright: #a50030;
+      --pink-accent: #ff6b9d;
+      --pink-glow: #ff4d8b;
+      --text-light: #ffffff;
+      --text-soft: rgba(255, 255, 255, 0.85);
+      --text-muted: rgba(255, 255, 255, 0.6);
+      --success-color: #4caf50;
+      --error-color: #f44336;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, var(--bg-darkest) 0%, var(--bg-dark) 30%, var(--maroon-deep) 70%, var(--maroon-primary) 100%);
+      background-attachment: fixed;
+      color: var(--text-light);
+      min-height: 100vh;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: 
+        radial-gradient(circle at 20% 20%, rgba(255, 77, 139, 0.08) 0%, transparent 40%),
+        radial-gradient(circle at 80% 80%, rgba(165, 0, 48, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(128, 0, 32, 0.1) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 3rem 2rem;
+      position: relative;
+      z-index: 1;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 4rem;
+      padding: 2rem 0;
+    }
+
+    h1 {
+      font-size: 3rem;
+      font-weight: 800;
+      margin-bottom: 1rem;
+      background: linear-gradient(135deg, var(--text-light) 0%, var(--pink-accent) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: 0 0 40px rgba(255, 77, 139, 0.3);
+    }
+
+    .subtitle {
+      font-size: 1.2rem;
+      color: var(--pink-accent);
+      margin-bottom: 2rem;
+      font-weight: 500;
+      letter-spacing: 0.05em;
+      text-shadow: 0 0 20px rgba(255, 77, 139, 0.5);
+    }
+
+    .server-status {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 12px;
+      padding: 1rem 1.5rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 500;
+      font-size: 0.95rem;
+      border: 1px solid rgba(255, 107, 157, 0.2);
+      backdrop-filter: blur(10px);
+      margin-bottom: 2rem;
+    }
+
+    .server-status .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--error-color);
+      animation: pulse 2s infinite;
+    }
+
+    .server-status .status-dot.online {
+      background: var(--success-color);
+      animation: pulse 2s infinite var(--success-color);
+    }
+
+    .server-status .uptime {
+      font-family: 'Courier New', monospace;
+      letter-spacing: 0.5px;
+    }
+
+    .icon-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+
+    .icon-card {
+      background: linear-gradient(145deg, rgba(74, 0, 20, 0.6) 0%, rgba(26, 0, 16, 0.8) 100%);
+      border-radius: 16px;
+      padding: 2rem 1.5rem;
+      text-align: center;
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 107, 157, 0.2);
+      box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.4),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      position:;
+      overflow: hidden;
+    }
+
+    .icon-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--maroon-primary), var(--pink-accent));
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform 0.4s ease;
+    }
+
+    .icon-card:hover {
+      transform: translateY(-8px);
+      border-color: rgba(255, 107, 157, 0.5);
+      box-shadow: 
+        0 16px 48px rgba(165, 0, 48, 0.5),
+        0 0 0 1px rgba(255, 77, 139, 0.3),
+        inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    }
+
+    .icon-card:hover::before {
+      transform: scaleX(1);
+    }
+
+    .icon-card .icon-wrapper {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 1.2rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, rgba(128, 0, 32, 0.8), rgba(74, 0, 20, 0.9));
+      border-radius: 12px;
+      border: 1px solid rgba(255, 107, 157, 0.3);
+      box-shadow: 0 4px 16px rgba(165, 0, 48, 0.4);
+      animation: float 3s ease-in-out infinite;
+    }
+
+    .icon-card:nth-child(2) .icon-wrapper {
+      animation-delay: 0.5s;
+    }
+
+    .icon-card:nth-child(3) .icon-wrapper {
+      animation-delay: 1s;
+    }
+
+    .icon-card:nth-child(4) .icon-wrapper {
+      animation-delay: 1.5s;
+    }
+
+    .icon-card:nth-child(5) .icon-wrapper {
+      animation-delay: 2s;
+    }
+
+    .icon-card:nth-child(6) .icon-wrapper {
+      animation-delay: 2.5s;
+    }
+
+    .icon-card img {
+      width: 32px;
+      height: 32px;
+      filter: brightness(0) invert(1) drop-shadow(0 0 8px rgba(255, 107, 157, 0.6));
+    }
+
+    .icon-card h3 {
+      margin: 0;
+      font-size: 1.3rem;
+      font-weight: 700;
+      color: var(--text-light);
+      letter-spacing: 0.02em;
+    }
+
+    .icon-card p {
+      margin: 0.5rem 0 0;
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      font-weight: 400;
+    }
+
+    .old-vs-new {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 2rem;
+      justify-content: center;
+      margin-top: 4rem;
+    }
+
+    .comparison {
+      flex: 1;
+      min-width: 320px;
+      background: linear-gradient(145deg, rgba(74, 0, 20, 0.4) 0%, rgba(26, 0, 16, 0.6) 100%);
+      padding: 2rem;
+      border-radius: 16px;
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 107, 157, 0.15);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    .comparison h2 {
+      font-size: 1.5rem;
+      margin-bottom: 1.5rem;
+      color: var(--pink-accent);
+      border-bottom: 2px solid;
+      border-image: linear-gradient(90deg, var(--maroon-primary), var(--pink-accent)) 1;
+      padding-bottom: 0.75rem;
+      font-weight: 700;
+    }
+
+    .comparison-item {
+      display: flex;
+      align-items: center;
+      margin: 0.8rem 0;
+      padding: 0.8rem 1rem;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 10px;
+      border-left: 3px solid var(--maroon-primary);
+      transition: all 0.3s ease;
+    }
+
+    .comparison-item:hover {
+      background: rgba(165, 0, 48, 0.2);
+      border-left-color: var(--pink-accent);
+      transform: translateX(4px);
+    }
+
+    .comparison-item span {
+      margin-left: 1rem;
+      font-size: 1rem;
+      color: var(--text-soft);
+      font-weight: 500;
+    }
+
+    .material-icon {
+      font-family: 'Material Icons';
+      font-size: 28px;
+      color: var(--text-light);
+      width: 32px;
+      text-align: center;
+    }
+
+    .fluent-icon {
+      width: 28px;
+      height: 28px;
+      filter: brightness(0) invert(1) drop-shadow(0 0 4px rgba(255, 107, 157, 0.5));
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 4rem;
+      padding: 2rem;
+      background: linear-gradient(145deg, rgba(10, 0, 8, 0.6) 0%, rgba(26, 0, 16, 16, 0.8) 100%);
+      border-radius: 16px;
+      border: 0.8) 100%);
+      border-radius: 16px;
+      border: 1px solid rgba(255, 107, 157, 0.15);
+      backdrop-filter: blur(20px);
+    }
+
+    footer p {
+      margin: 0.5rem 0;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    footer .highlight {
+      color: var(--pink-accent);
+      font-weight: 600;
+    }
+
+    /* Animations */
+    @keyframes float {
+      0%, 100% {
+        transform: translateY(0px);
+      }
+      50% {
+        transform: translateY(-10px);
+      }
+    }
+
+    @keyframes pulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(255, 107, 157, 0.4);
+      }
+      70% {
+        box-shadow: 0 0 0 10px rgba(255, 107, 157, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(255, 107, 157, 0);
+      }
+    }
+
+    @keyframes pulse-success {
+      0% {
+        box-shadow: 0 0 0 0 rgba(76, 175, 80, 0.4);
+      }
+      70% {
+        box-shadow: 0 0 0 10px rgba(76, 175, 80, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(76, 175, 80, 0);
+      }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .container {
+        padding: 2rem 1rem;
+      }
+
+      h1 {
+        font-size: 2.2rem;
+      }
+
+      .icon-grid {
+        grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>TGQ — Prediction Engine</h1>
+      <p class="subtitle">Modern Dashboard with Dark Maroon Theme</p>
+      <div class="server-status" id="serverStatus">
+        <div class="status-dot" id="statusDot"></div>
+        <span id="statusLabel">Checking server...</span>
+        <span class="uptime" id="uptimeLabel"></span>
+      </div>
+    </header>
+
+    <div class="icon-grid">
+      <div class="icon-card">
+        <div class="icon-wrapper">
+          <img src="https://cdn.jsdelivr.net/npm/@fluentui/svg-icons@1.1.334/icons/dashboard_24_regular.svg" alt="Dashboard Icon">
+        </div>
+        <h3>Dashboard</h3>
+        <p>Overview & Statistics</p>
+      </div>
+
+      <div class="icon-card">
+        <div class="icon-wrapper">
+          <img src="https://cdn.jsdelivr.net/npm/@fluentui/svg-icons@1.1.334/icons/book_database_24_regular.svg" alt="Markets Icon">
+        </div>
+        <h3>Markets</h3>
+        <p>Data & Predictions</p>
+      </div>
+
+      <div class="icon-card">
+        <div class="icon-wrapper">
+          <img src="https://cdn.jsdelivr.net/npm/@fluentui/svg-icons@1.1.334/icons/chart_multiple_24_regular.svg" alt="Analysis Icon">
+        </div>
+        <h3>Analysis</h3>
+        <p>Trends & Insights</p>
+      </div>
+
+      <div class="icon-card">
+        <div class="icon-wrapper">
+          <img src="https://cdn.jsdelivr.net/npm/@fluentui/svg-icons@1.1.334/icons/clipboard_data_bar_24_regular.svg" alt="Results Icon">
+        </div>
+        <h3>Results</h3>
+        <p>Prediction History</p>
+      </div>
+
+      <div class="icon-card">
+        <div class="icon-wrapper">
+          <img src="https://cdn.jsdelivr.net/npm/@fluentui/svg-icons@1.1.334/icons/edit_24_regular.svg" alt="Input Icon">
+        </div>
+        <h3>Input</h3>
+        <p>Data Entry</p>
+      </div>
+
+      <div class="icon-card">
+        <div class="icon-wrapper">
+          <img src="https://cdn.jsdelivr.net/npm/@fluentui/svg-icons@1.1.334/icons/info_24_regular.svg" alt="About Icon">
+        </div>
+        <h3>About</h3>
+        <p>Information</p>
+      </div>
+    </div>
+
+    <div class="old-vs-new">
+      <div class="comparison">
+        <h2>Old (Material Icons)</h2>
+        <div class="comparison-item">
+          <span class="material-icon">dashboard</span>
+          <span>Dashboard</span>
+        </div>
+        <div class="comparison-item">
+          <span class="material-icon">grid_view</span>
+          <span>Markets</span>
+        </div>
+        <div class="comparison-item">
+          <span class="material-icon">analytics</span>
+          <span>Analysis</span>
+        </div>
+        <div class="comparison-item">
+          <span class="material-icon">history</span>
+          <span>Results</span>
+        </div>
+        <div class="comparison-item">
+          <span class="material-icon">edit_note</span>
+          <span>Input</span>
+        </div>
+        <div class="comparison-item">
+          <span class="material-icon">info</span>
+          <span>About</span>
+        </div>
+      </div>
+
+      <div class="comparison">
+        <h2>New (FluentUI Icons)</h2>
+        <div class="comparison-item">
+          <img src="https://cdn.jsdelivr.net/npm/@fluentui/svg-icons@1.1.334/icons/dashboard_24_regular.svg" class="fluent-icon" alt="Dashboard">
+          <span>Dashboard</span>
+        </div>
+        <div class="comparison-item">
+          <img src="https://cdn.jsdelivr.net/npm/@fluentui/svg-icons@1.1.334/icons/book_database_24_regular.svg" class="fluent-icon" alt="Markets">
+          <span>Markets</span>
+        </div>
+        <div class="comparison-item">
+          <img src="https://cdn.jsdelivr.net/npm/@fluentui/svg-icons@1.1.334/icons/chart_multiple_24_regular.svg" class="fluent-icon" alt="Analysis">
+          <span>Analysis</span>
+        </div>
+        <div class="comparison-item">
+          <img src="https://cdn.jsdelivr.net/npm/@fluentui/svg-icons@1.1.334/icons/clipboard_data_bar_24_regular.svg" class="fluent-icon" alt="Results">
+          <span>Results</span>
+        </div>
+        <div class="comparison-item">
+          <img src="https://cdn.jsdelivr.net/npm/@fluentui/svg-icons@1.1.334/icons/edit_24_regular.svg" class="fluent-icon" alt="Input">
+          <span>Input</span>
+        </div>
+        <div class="comparison-item">
+          <img src="https://cdn.jsdelivr.net/npm/@fluentui/svg-icons@1.1.334/icons/info_24_regular.svg" class="fluent-icon" alt="About">
+          <span>About</span>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <p>© 2026 <span class="highlight">TGQ</span> — Modern Prediction Engine</p>
+      <p>Designed with <span class="highlight">FluentUI Icons</span> & <span class="highlight">Dark Maroon Gradient</span></p>
+    </footer>
+  </div>
+
+  <script>
+    // Function to update server status
+    async function updateServerStatus() {
+      const statusDot = document.getElementById('statusDot');
+      const statusLabel = document.getElementById('statusLabel');
+      const uptimeLabel = document.getElementById('uptimeLabel');
+      const serverStatus = document.getElementById('serverStatus');
+
+      try {
+        const response = await fetch('http://192.168.1.5:8443/status', { timeout: 5000 });
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+        const data = await response.json();
+        
+        // Update status
+        statusDot.className = 'status-dot online';
+        statusLabel.textContent = 'Online';
+        uptimeLabel.textContent = `Uptime: ${data.uptime || 'N/A'}`;
+        serverStatus.style.borderColor = 'rgba(76, 175, 80, 0.3)';
+        statusDot.style.animation = 'pulse-success 2s infinite';
+      } catch (error) {
+        console.error('Failed to fetch server status:', error);
+        statusDot.className = 'status-dot';
+        statusLabel.textContent = 'Offline';
+        uptimeLabel.textContent = '';
+        serverStatus.style.borderColor = 'rgba(244, 67, 54, 0.3)';
+        statusDot.style.animation = 'pulse 2s infinite';
+      }
+    }
+
+    // Initial update
+    updateServerStatus();
+    
+    // Update every 30 seconds
+    setInterval(updateServerStatus, 30000);
+  </script>
+</body>
+</html>
