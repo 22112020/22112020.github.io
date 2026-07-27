@@ -6,3 +6,4 @@ data_harian/
 pasaran_luna/
 trash_dashboard/
 .pytest_cache/
+.vercel
