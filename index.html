@@ -134,6 +134,16 @@ nav{display:flex;align-items:center;justify-content:space-between;padding:16px 0
 .about-card p{font-size:13px;color:var(--text-secondary);line-height:1.6}
 
 /* ===== Input Data ===== */
+.input-paste-box{background:var(--bg-card);border:1px dashed var(--border-card-hover);border-radius:var(--radius-md);padding:16px;margin-bottom:16px;transition:var(--transition)}
+.input-paste-box:focus-within{border-color:var(--accent-3);box-shadow:0 0 16px rgba(192,132,252,.1)}
+.input-paste-box textarea{width:100%;min-height:100px;background:rgba(255,255,255,.03);border:1px solid var(--border-card);border-radius:var(--radius-sm);color:var(--text-primary);font-size:13px;font-family:monospace;padding:12px;outline:none;resize:vertical;transition:var(--transition);line-height:1.5}
+.input-paste-box textarea:focus{border-color:var(--accent-3)}
+.input-paste-box textarea::placeholder{color:var(--text-muted);font-size:12px}
+.input-paste-box .paste-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.input-paste-box .paste-label span{font-size:13px;font-weight:600;color:var(--accent-3)}
+.input-paste-box .paste-label .hint{font-size:11px;color:var(--text-muted)}
+.paste-parse-btn{padding:6px 16px;border-radius:var(--radius-sm);background:var(--gradient-btn);color:#fff;border:none;font-size:12px;font-weight:600;cursor:pointer;transition:var(--transition)}
+.paste-parse-btn:hover{transform:translateY(-1px);box-shadow:0 4px 12px var(--accent-glow)}
 .input-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:10px}
 .input-box{background:var(--bg-card);border:1px solid var(--border-card);border-radius:var(--radius-md);padding:14px 16px;transition:var(--transition)}
 .input-box:hover{border-color:var(--border-card-hover)}
@@ -361,6 +371,29 @@ footer .copy{color:#444;font-size:12px}
     <p style="font-size:13px;color:var(--text-secondary);margin-bottom:16px">
       Masukkan hasil result & periode untuk setiap pasar. Data akan dikirim ke server pusat untuk diproses engine prediksi.
     </p>
+
+    <!-- Luna Paste Here -->
+    <div class="input-paste-box">
+      <div class="paste-label">
+        <span>📋 Luna paste here</span>
+        <div>
+          <span class="hint">Paste text dari data_harian → otomatis isi box di bawah</span>
+          <button class="paste-parse-btn" onclick="TGQ.parsePaste()" style="margin-left:10px">⚡ Parse</button>
+        </div>
+      </div>
+      <textarea id="lunaPaste" placeholder="Contoh:
+5D TOTO MACAU POOL
+06510
+[PERIODE : 3463]
+
+4D TOTO MACAU POOL
+7377
+[PERIODE : 13772]
+
+KING KONG 4D POOL
+7349
+[PERIODE : 1926]" onpaste="setTimeout(()=>TGQ.parsePaste(),100)"></textarea>
+    </div>
 
     <!-- Toolbar -->
     <div class="input-toolbar">
@@ -713,6 +746,106 @@ const TGQ = (() => {
     saveInputRows();
   }
 
+  function parsePaste() {
+    const textarea = document.getElementById('lunaPaste');
+    const text = textarea.value.trim();
+    if (!text) return;
+
+    // Format: MARKET_NAME POOL\nXXXX\n[PERIODE : N]
+    // Split into entries by blank lines
+    const blocks = text.split(/\n{2,}/).filter(b => b.trim());
+
+    // Track which markets we added
+    let addedCount = 0;
+
+    blocks.forEach(block => {
+      const lines = block.trim().split('\n').filter(l => l.trim());
+      if (lines.length < 2) return;
+
+      // Find POOL line → extract market name
+      const poolIdx = lines.findIndex(l => /POOL/i.test(l));
+      if (poolIdx === -1) return;
+
+      let marketName = lines[poolIdx].replace(/POOL/i, '').trim();
+      // Normalize: uppercase, remove spaces
+      marketName = marketName.toUpperCase().replace(/\s+/g, '');
+      if (!marketName) return;
+
+      // Next line after POOL is result
+      let result = '';
+      if (poolIdx + 1 < lines.length) {
+        result = lines[poolIdx + 1].replace(/[^0-9]/g, '');
+      }
+
+      // Find PERIODE line
+      let period = '';
+      const periIdx = lines.findIndex(l => /PERIODE|PERIOD/i.test(l));
+      if (periIdx !== -1) {
+        period = lines[periIdx].replace(/.*[:\s]\s*/, '').trim();
+      }
+
+      // Normalize market alias
+      const upper = marketName.toUpperCase();
+      const aliasMap = {
+        'TOTOMACAU': '4DTOTOMACAU',
+        'TOTOMACAO': '4DTOTOMACAU',
+        'TOTOMACAU4D': '4DTOTOMACAU',
+        '4DTOTOMACAU': '4DTOTOMACAU',
+        'TOTOMACAU5D': '5DTOTOMACAU',
+        '5DTOTOMACAU': '5DTOTOMACAU',
+        'TOTOMACAU6D': '6DTOTOMACAU',
+        '6DTOTOMACAU': '6DTOTOMACAU',
+        'KINGKONG4D': 'KINGKONG4D',
+        'KINGKONG4D': 'KINGKONG4D',
+      };
+      marketName = aliasMap[upper] || marketName;
+
+      // Check if market already exists
+      const existing = inputRows.find(r => r.name.toUpperCase() === marketName.toUpperCase());
+      if (existing) {
+        if (result) existing.result = result;
+        if (period) existing.period = period;
+        const resInp = document.getElementById(`inp_${existing.name}_result`);
+        const perInp = document.getElementById(`inp_${existing.name}_period`);
+        if (resInp) resInp.value = result;
+        if (perInp) perInp.value = period;
+      } else {
+        // Add new row
+        const found = allMarkets.find(m => {
+          const mn = (m.name || m).toUpperCase().replace(/\s+/g, '');
+          return mn === marketName.toUpperCase();
+        });
+        const finalName = found ? (found.name || found) : marketName;
+        addInputRow(finalName);
+        const row = inputRows.find(r => r.name === finalName);
+        if (row) {
+          if (result) row.result = result;
+          if (period) row.period = period;
+          const resInp = document.getElementById(`inp_${finalName}_result`);
+          const perInp = document.getElementById(`inp_${finalName}_period`);
+          if (resInp) resInp.value = result;
+          if (perInp) perInp.value = period;
+        }
+      }
+      addedCount++;
+    });
+
+    updateInputSummary();
+    saveInputRows();
+
+    // Flash effect
+    textarea.style.borderColor = '#2ecc71';
+    setTimeout(() => { textarea.style.borderColor = ''; }, 1500);
+
+    // Show notification
+    const toolbar = document.querySelector('.input-toolbar');
+    const notif = document.createElement('div');
+    notif.style.cssText = 'color:#2ecc71;font-size:13px;padding:4px 0;animation:fadeIn .3s';
+    notif.textContent = `✅ ${addedCount} market diparse. Cek box di bawah lalu review & kirim.`;
+    textarea.parentNode.appendChild(notif);
+    setTimeout(() => notif.remove(), 4000);
+  }
+
   function updateInputSummary() {
     let filled = 0;
     inputRows.forEach(r => {
@@ -729,18 +862,47 @@ const TGQ = (() => {
 
   function saveInputRows() {
     try {
-      // Save only the market names (not filled values) to localStorage
-      const names = inputRows.map(r => r.name);
-      localStorage.setItem('tgq_input_rows', JSON.stringify(names));
+      // Save full data including filled values
+      const data = inputRows.map(r => ({
+        name: r.name,
+        result: document.getElementById(`inp_${r.name}_result`)?.value || r.result || '',
+        period: document.getElementById(`inp_${r.name}_period`)?.value || r.period || ''
+      }));
+      localStorage.setItem('tgq_input_data', JSON.stringify(data));
+      // Also save textarea content
+      const ta = document.getElementById('lunaPaste');
+      if (ta) localStorage.setItem('tgq_paste_text', ta.value);
     } catch(e) {}
   }
 
   function loadSavedInput() {
     try {
-      const saved = localStorage.getItem('tgq_input_rows');
+      // Restore textarea content
+      const ta = document.getElementById('lunaPaste');
+      const savedText = localStorage.getItem('tgq_paste_text');
+      if (ta && savedText) ta.value = savedText;
+
+      // Restore full input data with values
+      const saved = localStorage.getItem('tgq_input_data');
       if (saved) {
-        const names = JSON.parse(saved);
-        names.forEach(n => addInputRow(n));
+        const data = JSON.parse(saved);
+        data.forEach(item => {
+          // Add row if not already present
+          if (!inputRows.some(r => r.name === item.name)) {
+            addInputRow(item.name);
+          }
+          // Fill values
+          const row = inputRows.find(r => r.name === item.name);
+          if (row) {
+            if (item.result) row.result = item.result;
+            if (item.period) row.period = item.period;
+            const resInp = document.getElementById(`inp_${item.name}_result`);
+            const perInp = document.getElementById(`inp_${item.name}_period`);
+            if (resInp) resInp.value = item.result || '';
+            if (perInp) perInp.value = item.period || '';
+          }
+        });
+        updateInputSummary();
       }
     } catch(e) {}
   }
@@ -811,6 +973,7 @@ const TGQ = (() => {
   }
 
   function clearInput() {
+    // Clear all market rows
     inputRows.forEach(r => {
       const res = document.getElementById(`inp_${r.name}_result`);
       const per = document.getElementById(`inp_${r.name}_period`);
@@ -819,6 +982,9 @@ const TGQ = (() => {
       r.result = '';
       r.period = '';
     });
+    // Also clear paste textarea
+    const ta = document.getElementById('lunaPaste');
+    if (ta) ta.value = '';
     updateInputSummary();
     dom.inputStatus.className = '';
     dom.inputStatus.textContent = '';
