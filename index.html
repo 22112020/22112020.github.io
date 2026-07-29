@@ -903,13 +903,20 @@ const TGQ = (() => {
             <tbody>${rowsHtml}</tbody>
           </table>
         </div>` : ''}
-        <div style="display:flex;gap:8px;justify-content:center">
-          <button onclick="this.closest('#parsePopupOverlay').remove()" style="
+        <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">
+          <button onclick="this.closest('#parsePopupOverlay').remove();setTimeout(()=>TGQ.submitInput(),100)" style="
             padding:10px 28px;border-radius:var(--radius-sm);background:var(--gradient-btn);
             color:#fff;border:none;font-size:14px;font-weight:600;cursor:pointer;
             transition:var(--transition)
-          " onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">
-            🔍 Review & Kirim
+          " onmouseover="this.style.transform='translateY(-1px')" onmouseout="this.style.transform=''">
+            🚀 Kirim Langsung
+          </button>
+          <button onclick="this.closest('#parsePopupOverlay').remove()" style="
+            padding:10px 20px;border-radius:var(--radius-sm);background:transparent;
+            color:var(--text-muted);border:1px solid var(--border-card);font-size:13px;
+            cursor:pointer;transition:var(--transition)
+          " onmouseover="this.style.color='var(--accent-3)';this.style.borderColor='var(--accent-3)'" onmouseout="this.style.color='';this.style.borderColor=''">
+            🔍 Review Dulu
           </button>
           <button onclick="document.getElementById('lunaPaste').value='';this.closest('#parsePopupOverlay').remove();TGQ.clearInput()" style="
             padding:10px 20px;border-radius:var(--radius-sm);background:transparent;
