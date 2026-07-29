@@ -752,72 +752,82 @@ const TGQ = (() => {
 
   function parsePaste() {
     const textarea = document.getElementById('lunaPaste');
-    const text = textarea.value.trim();
-    if (!text) return;
+    let text = textarea.value;
+    if (!text.trim()) return;
 
-    // Format: MARKET_NAME POOL\nXXXX\n[PERIODE : N]
-    // Split into entries by blank lines
-    const blocks = text.split(/\n{2,}/).filter(b => b.trim());
+    // 1️⃣ Sanitasi — buang UI artifacts, TAPI pertahankan blank lines sebagai separator
+    const uiArtifacts = ['Play Now', 'btn_live', 'labelthumbnail', 'thumbnail'];
+    const lines = text.split('\n');
+    const sanitized = lines.map(l => {
+      const s = l.trim();
+      // Blank line tetap dipertahankan sebagai separator
+      if (!s) return '';
+      // Buang UI artifact lines
+      if (uiArtifacts.includes(s) || uiArtifacts.some(a => s.includes(a))) return null;
+      return l;
+    }).filter(l => l !== null).join('\n');
 
-    // Track which markets we added
+    // 2️⃣ Split per block (blank line separator)
+    const blocks = sanitized.split(/\n{2,}/).filter(b => b.trim());
+
     let addedCount = 0;
 
     blocks.forEach(block => {
-      const lines = block.trim().split('\n').filter(l => l.trim());
-      if (lines.length < 2) return;
+      const blockLines = block.split('\n').map(l => l.trim()).filter(l => l);
+      if (blockLines.length < 2) return;
 
-      // Find POOL line → extract market name
-      const poolIdx = lines.findIndex(l => /POOL/i.test(l));
+      // 3️⃣ Cari baris POOL → extract nama market (sama seperti market_sync.py)
+      const poolIdx = blockLines.findIndex(l => /POOL/i.test(l));
       if (poolIdx === -1) return;
 
-      let marketName = lines[poolIdx].replace(/POOL/i, '').trim();
-      // Normalize: uppercase, remove spaces
-      marketName = marketName.toUpperCase().replace(/\s+/g, '');
+      let marketName = blockLines[poolIdx].split(/POOL/i)[0].trim().toUpperCase().replace(/\s+/g, '');
       if (!marketName) return;
 
-      // Next line after POOL is result
+      // 4️⃣ Cari result — scan beberapa baris ke depan, 4 atau 5 digit
       let result = '';
-      if (poolIdx + 1 < lines.length) {
-        result = lines[poolIdx + 1].replace(/[^0-9]/g, '');
+      for (let j = poolIdx + 1; j < Math.min(poolIdx + 5, blockLines.length); j++) {
+        const digitLine = blockLines[j].replace(/[^0-9]/g, '');
+        if (digitLine && (digitLine.length === 4 || digitLine.length === 5)) {
+          result = digitLine;
+          break;
+        }
       }
 
-      // Find PERIODE line
+      // 5️⃣ Cari PERIODE via regex (sama seperti market_sync.py)
       let period = '';
-      const periIdx = lines.findIndex(l => /PERIODE|PERIOD/i.test(l));
-      if (periIdx !== -1) {
-        period = lines[periIdx].replace(/.*[:\s]\s*/, '').trim();
+      for (let j = poolIdx + 1; j < Math.min(poolIdx + 5, blockLines.length); j++) {
+        const m = blockLines[j].match(/PERIODE\s*:\s*(\d+)/i);
+        if (m) {
+          period = m[1];
+          break;
+        }
       }
 
-      // Normalize market alias
-      const upper = marketName.toUpperCase();
+      if (!result) return;
+
+      // 6️⃣ Normalisasi alias
       const aliasMap = {
-        'TOTOMACAU': '4DTOTOMACAU',
-        'TOTOMACAO': '4DTOTOMACAU',
-        'TOTOMACAU4D': '4DTOTOMACAU',
-        '4DTOTOMACAU': '4DTOTOMACAU',
-        'TOTOMACAU5D': '5DTOTOMACAU',
-        '5DTOTOMACAU': '5DTOTOMACAU',
-        'TOTOMACAU6D': '6DTOTOMACAU',
-        '6DTOTOMACAU': '6DTOTOMACAU',
-        'KINGKONG4D': 'KINGKONG4D',
+        'TOTOMACAU': '4DTOTOMACAU', 'TOTOMACAO': '4DTOTOMACAU',
+        'TOTOMACAU4D': '4DTOTOMACAU', '4DTOTOMACAU': '4DTOTOMACAU',
+        'TOTOMACAU5D': '5DTOTOMACAU', '5DTOTOMACAU': '5DTOTOMACAU',
+        'TOTOMACAU6D': '6DTOTOMACAU', '6DTOTOMACAU': '6DTOTOMACAU',
         'KINGKONG4D': 'KINGKONG4D',
       };
-      marketName = aliasMap[upper] || marketName;
+      marketName = aliasMap[marketName] || marketName;
 
-      // Check if market already exists
+      // 7️⃣ Isi ke input rows
       const existing = inputRows.find(r => r.name.toUpperCase() === marketName.toUpperCase());
       if (existing) {
         if (result) existing.result = result;
         if (period) existing.period = period;
-        const resInp = document.getElementById(`inp_${existing.name}_result`);
-        const perInp = document.getElementById(`inp_${existing.name}_period`);
-        if (resInp) resInp.value = result;
-        if (perInp) perInp.value = period;
+        const ri = document.getElementById(`inp_${existing.name}_result`);
+        const pi = document.getElementById(`inp_${existing.name}_period`);
+        if (ri) ri.value = result;
+        if (pi) pi.value = period;
       } else {
-        // Add new row
         const found = allMarkets.find(m => {
           const mn = (m.name || m).toUpperCase().replace(/\s+/g, '');
-          return mn === marketName.toUpperCase();
+          return mn === marketName;
         });
         const finalName = found ? (found.name || found) : marketName;
         addInputRow(finalName);
@@ -825,10 +835,10 @@ const TGQ = (() => {
         if (row) {
           if (result) row.result = result;
           if (period) row.period = period;
-          const resInp = document.getElementById(`inp_${finalName}_result`);
-          const perInp = document.getElementById(`inp_${finalName}_period`);
-          if (resInp) resInp.value = result;
-          if (perInp) perInp.value = period;
+          const ri = document.getElementById(`inp_${finalName}_result`);
+          const pi = document.getElementById(`inp_${finalName}_period`);
+          if (ri) ri.value = result;
+          if (pi) pi.value = period;
         }
       }
       addedCount++;
@@ -837,14 +847,12 @@ const TGQ = (() => {
     updateInputSummary();
     saveInputRows();
 
-    // Flash effect
+    // Flash + toast
     textarea.style.borderColor = '#2ecc71';
     setTimeout(() => { textarea.style.borderColor = ''; }, 1500);
 
-    // Show success + langsung submit
     if (addedCount > 0) {
       showParseToast(addedCount);
-      // Langsung kirim data setelah parse
       setTimeout(() => TGQ.submitInput(), 300);
     }
   }
