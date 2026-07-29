@@ -166,6 +166,17 @@ footer .links a{color:var(--text-muted);text-decoration:none;font-size:13px;tran
 footer .links a:hover{color:var(--accent-3)}
 footer .copy{color:#444;font-size:12px}
 
+/* ===== Hoki Box ===== */
+.hoki-box{margin-top:16px;background:linear-gradient(135deg,rgba(192,57,43,.1),rgba(142,68,173,.1));border:1px solid rgba(192,57,43,.2);border-radius:var(--radius-lg);padding:16px 20px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;transition:var(--transition)}
+.hoki-box:hover{border-color:var(--accent-3);box-shadow:0 0 20px rgba(192,132,252,.1)}
+.hoki-box .label{font-size:13px;color:var(--text-secondary);display:flex;align-items:center;gap:6px}
+.hoki-box .label .icon{font-size:20px}
+.hoki-box .nums{display:flex;gap:6px;align-items:center}
+.hoki-box .nums .ball{width:36px;height:36px;border-radius:50%;background:var(--gradient-ball);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:800;color:#fff;box-shadow:0 2px 10px rgba(192,57,43,.3)}
+.hoki-box .nums .ball.bu{background:var(--gradient-ball-bu);box-shadow:0 2px 10px rgba(124,58,237,.3)}
+.hoki-box .nums .sep{color:var(--text-muted);font-size:13px;margin:0 4px}
+.hoki-box .meta{font-size:11px;color:var(--text-muted)}
+
 /* ===== Utilities ===== */
 .spinner{display:inline-block;width:20px;height:20px;border:2px solid rgba(255,255,255,.1);border-top-color:var(--accent-3);border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -240,6 +251,13 @@ footer .copy{color:#444;font-size:12px}
     <div class="stat-card"><div class="num" id="statEngines">—</div><div class="label">Mesin Prediksi</div><div class="sub">AI & Statistik</div></div>
     <div class="stat-card"><div class="num" id="statStatus">—</div><div class="label">Status</div><div class="sub">Server</div></div>
     <div class="stat-card"><div class="num" id="statVersion">—</div><div class="label">Versi API</div><div class="sub">Luna Core</div></div>
+  </div>
+
+  <!-- Hoki Number -->
+  <div class="hoki-box" id="hokiBox">
+    <div class="label"><span class="icon">🍀</span>Hoki Number Hari Ini</div>
+    <div class="nums" id="hokiNums"><span style="color:var(--text-muted);font-size:13px">Memuat...</span></div>
+    <div class="meta" id="hokiMeta"></div>
   </div>
 </section>
 
@@ -407,6 +425,9 @@ const TGQ = (() => {
     statVersion: $('statVersion'),
     clockTime: $('clockTime'),
     clockDate: $('clockDate'),
+    hokiBox: $('hokiBox'),
+    hokiNums: $('hokiNums'),
+    hokiMeta: $('hokiMeta'),
     engineSelect: $('engineSelect'),
     marketSelect: $('marketSelect'),
     predBtn: $('predBtn'),
@@ -477,6 +498,25 @@ const TGQ = (() => {
   }
 
   // ===== Load Data =====
+  async function loadHoki() {
+    try {
+      const r = await fetch('https://22112020githubio-seven.vercel.app/api/hoki');
+      const d = await r.json();
+      if (d.success) {
+        const main = d.main || [];
+        const backup = d.backup || [];
+        dom.hokiNums.innerHTML = main.map((n,i) => `<div class="ball" style="animation-delay:${i*0.08}s">${n}</div>`).join('') +
+          (backup.length ? `<span class="sep">cad:</span>` +
+            backup.map((n,i) => `<div class="ball bu" style="animation-delay:${(main.length+i)*0.08}s">${n}</div>`).join('') : '');
+        dom.hokiMeta.textContent = `✨ ${d.generated_at} · 📊 ${d.stats.total_records_analyzed} data dianalisis dari ${d.stats.markets_analyzed} pasar`;
+      } else {
+        dom.hokiNums.innerHTML = '<span style="color:var(--text-muted);font-size:13px">Tidak tersedia</span>';
+      }
+    } catch(e) {
+      dom.hokiNums.innerHTML = '<span style="color:var(--text-muted);font-size:13px">Gagal memuat</span>';
+    }
+  }
+
   async function loadStatus() {
     try {
       const r = await fetch('https://22112020githubio-seven.vercel.app/api/status');
@@ -591,7 +631,7 @@ const TGQ = (() => {
     // Set default date to today (Jakarta UTC+7)
     const now = new Date();
     const utcMs = now.getTime() + now.getTimezoneOffset() * 60000;
-      const jakarta = new Date(utcMs + 7 * 3600000);
+    const jakarta = new Date(utcMs + 7 * 3600000);
     dom.inputDate.value = jakarta.toISOString().split('T')[0];
 
     // Populate add-market dropdown
@@ -797,6 +837,7 @@ const TGQ = (() => {
     startClock();
     initNav();
     loadStatus();
+    loadHoki();
     loadEngines();
     loadMarkets();
     initInput();
