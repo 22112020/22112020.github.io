@@ -379,7 +379,6 @@ footer .copy{color:#444;font-size:12px}
     <a href="https://22112020githubio-seven.vercel.app/api/docs" target="_blank">API Docs</a>
   </div>
   <div class="copy">© 2026 TGQ — Luna Core. All rights reserved.</div>
-  <div class="copy" style="font-size:11px;color:#555;margin-top:6px">🚀 GitHub Pages · 🕐 Waktu lokal · ⚡ API via Vercel</div>
 <div class="copy" style="margin-top:8px;font-size:11px;color:#555">🌐 GitHub Pages · 🕐 Waktu lokal · ⚡ API via Vercel</div>
 </footer>
 </div>
@@ -430,7 +429,8 @@ const TGQ = (() => {
   function startClock() {
     function update() {
       const now = new Date();
-      const jakarta = new Date(now.getTime() + (7 * 60 - now.getTimezoneOffset()) * 60000);
+      const utcMs = now.getTime() + now.getTimezoneOffset() * 60000;
+      const jakarta = new Date(utcMs + 7 * 3600000);
       const days = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
       const months = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'];
       dom.clockTime.textContent = jakarta.toLocaleTimeString('id-ID', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
@@ -590,7 +590,8 @@ const TGQ = (() => {
   function initInput() {
     // Set default date to today (Jakarta UTC+7)
     const now = new Date();
-    const jakarta = new Date(now.getTime() + (7 * 60 - now.getTimezoneOffset()) * 60000);
+    const utcMs = now.getTime() + now.getTimezoneOffset() * 60000;
+      const jakarta = new Date(utcMs + 7 * 3600000);
     dom.inputDate.value = jakarta.toISOString().split('T')[0];
 
     // Populate add-market dropdown
