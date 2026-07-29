@@ -750,40 +750,83 @@ const TGQ = (() => {
     saveInputRows();
   }
 
+  // ── Orphan market slot config (sama seperti config/orphan_markets.json) ──
+  const ORPHAN_SLOTS = [
+    { after: 'KING KONG 4D POOL', idx: 0, market: 'HOKIdraw' },
+    { after: 'KING KONG 4D POOL', idx: 1, market: 'huahin0100' },
+    { after: 'KENTUCKYEVE POOL', idx: 0, market: 'cambodialotto' },
+    { after: 'BULLSEYE POOL', idx: 0, market: 'poipet12' },
+    { after: 'OREGON12 POOL', idx: 0, market: 'sydneylotto' },
+    { after: 'CHELSEA 15 POOL', idx: 0, market: 'poipet15' },
+    { after: 'CHELSEA 15 POOL', idx: 1, market: 'totomali1530' },
+    { after: 'CHELSEA 15 POOL', idx: 2, market: 'huahin1630' },
+    { after: 'CHELSEA 19 POOL', idx: 0, market: 'poipet19' },
+    { after: 'PCSO POOL', idx: 0, market: 'totomali2030' },
+    { after: 'PCSO POOL', idx: 1, market: 'huahin2100' },
+    { after: 'BRUNEI 21 POOL', idx: 0, market: 'poipet22' },
+    { after: 'BRUNEI 21 POOL', idx: 1, market: 'hongkonglotto' },
+    { after: 'BRUNEI 21 POOL', idx: 2, market: 'totomali2330' }
+  ];
+
+  function _fillInputRow(marketName, result, period) {
+    const existing = inputRows.find(r => r.name.toUpperCase() === marketName.toUpperCase());
+    if (existing) {
+      if (result) existing.result = result;
+      if (period) existing.period = period;
+      const ri = document.getElementById(`inp_${existing.name}_result`);
+      const pi = document.getElementById(`inp_${existing.name}_period`);
+      if (ri) ri.value = result;
+      if (pi) pi.value = period;
+    } else {
+      const found = allMarkets.find(m => {
+        const mn = (m.name || m).toUpperCase().replace(/\s+/g, '');
+        return mn === marketName;
+      });
+      const finalName = found ? (found.name || found) : marketName;
+      addInputRow(finalName);
+      const row = inputRows.find(r => r.name === finalName);
+      if (row) {
+        if (result) row.result = result;
+        if (period) row.period = period;
+        const ri = document.getElementById(`inp_${finalName}_result`);
+        const pi = document.getElementById(`inp_${finalName}_period`);
+        if (ri) ri.value = result;
+        if (pi) pi.value = period;
+      }
+    }
+  }
+
   function parsePaste() {
     const textarea = document.getElementById('lunaPaste');
     let text = textarea.value;
     if (!text.trim()) return;
 
-    // 1️⃣ Sanitasi — buang UI artifacts, TAPI pertahankan blank lines sebagai separator
     const uiArtifacts = ['Play Now', 'btn_live', 'labelthumbnail', 'thumbnail'];
-    const lines = text.split('\n');
-    const sanitized = lines.map(l => {
+    const rawLines = text.split('\n');
+    const strippedLines = rawLines.map(l => l.trim());
+
+    // ── TAHAP 1: Parse named markets (dengan POOL) ──
+    // Sanitasi — buang UI artifacts, pertahankan blank lines
+    const sanitized = rawLines.map((l, i) => {
       const s = l.trim();
-      // Blank line tetap dipertahankan sebagai separator
-      if (!s) return '';
-      // Buang UI artifact lines
+      if (!s) return '';                         // blank line tetap sebagai separator
       if (uiArtifacts.includes(s) || uiArtifacts.some(a => s.includes(a))) return null;
       return l;
     }).filter(l => l !== null).join('\n');
 
-    // 2️⃣ Split per block (blank line separator)
     const blocks = sanitized.split(/\n{2,}/).filter(b => b.trim());
-
     let addedCount = 0;
 
     blocks.forEach(block => {
       const blockLines = block.split('\n').map(l => l.trim()).filter(l => l);
       if (blockLines.length < 2) return;
 
-      // 3️⃣ Cari baris POOL → extract nama market (sama seperti market_sync.py)
       const poolIdx = blockLines.findIndex(l => /POOL/i.test(l));
       if (poolIdx === -1) return;
 
       let marketName = blockLines[poolIdx].split(/POOL/i)[0].trim().toUpperCase().replace(/\s+/g, '');
       if (!marketName) return;
 
-      // 4️⃣ Cari result — scan beberapa baris ke depan, 4 atau 5 digit
       let result = '';
       for (let j = poolIdx + 1; j < Math.min(poolIdx + 5, blockLines.length); j++) {
         const digitLine = blockLines[j].replace(/[^0-9]/g, '');
@@ -793,7 +836,6 @@ const TGQ = (() => {
         }
       }
 
-      // 5️⃣ Cari PERIODE via regex (sama seperti market_sync.py)
       let period = '';
       for (let j = poolIdx + 1; j < Math.min(poolIdx + 5, blockLines.length); j++) {
         const m = blockLines[j].match(/PERIODE\s*:\s*(\d+)/i);
@@ -805,7 +847,7 @@ const TGQ = (() => {
 
       if (!result) return;
 
-      // 6️⃣ Normalisasi alias
+      // Normalisasi alias
       const aliasMap = {
         'TOTOMACAU': '4DTOTOMACAU', 'TOTOMACAO': '4DTOTOMACAU',
         'TOTOMACAU4D': '4DTOTOMACAU', '4DTOTOMACAU': '4DTOTOMACAU',
@@ -815,33 +857,81 @@ const TGQ = (() => {
       };
       marketName = aliasMap[marketName] || marketName;
 
-      // 7️⃣ Isi ke input rows
-      const existing = inputRows.find(r => r.name.toUpperCase() === marketName.toUpperCase());
-      if (existing) {
-        if (result) existing.result = result;
-        if (period) existing.period = period;
-        const ri = document.getElementById(`inp_${existing.name}_result`);
-        const pi = document.getElementById(`inp_${existing.name}_period`);
-        if (ri) ri.value = result;
-        if (pi) pi.value = period;
-      } else {
-        const found = allMarkets.find(m => {
-          const mn = (m.name || m).toUpperCase().replace(/\s+/g, '');
-          return mn === marketName;
-        });
-        const finalName = found ? (found.name || found) : marketName;
-        addInputRow(finalName);
-        const row = inputRows.find(r => r.name === finalName);
-        if (row) {
-          if (result) row.result = result;
-          if (period) row.period = period;
-          const ri = document.getElementById(`inp_${finalName}_result`);
-          const pi = document.getElementById(`inp_${finalName}_period`);
-          if (ri) ri.value = result;
-          if (pi) pi.value = period;
+      _fillInputRow(marketName, result, period);
+      addedCount++;
+    });
+
+    // ── TAHAP 2: Parse orphan markets (position-based, seperti market_sync.py) ──
+    // Iterasi line-by-line, cari POOL markets, lalu collect orphan digits setelahnya
+    const orphanResults = {}; // afterMarket_header → [digit, digit, ...]
+
+    for (let i = 0; i < strippedLines.length; i++) {
+      const line = strippedLines[i];
+      if (!line || uiArtifacts.includes(line) || uiArtifacts.some(a => line.includes(a))) continue;
+
+      // Deteksi named POOL market
+      if (/POOL/i.test(line)) {
+        const marketHeader = line; // simpan header asli (dengan spasi)
+
+        // Skip: result, [PERIODE], Play Now
+        let j = i + 1;
+        let skipped = 0;
+        while (j < strippedLines.length && skipped < 3) {
+          const l = strippedLines[j];
+          if (l && /^\d{4,5}$/.test(l)) { skipped++; }
+          else if (l && /^\[?PERIODE/i.test(l)) { skipped++; }
+          else if (l === 'Play Now') { skipped++; }
+          else if (!l) { /* blank line — tetap lanjut */ }
+          j++;
+        }
+
+        // Collect consecutive orphan digits setelah market ini
+        const orphans = [];
+        let k = j;
+        while (k < strippedLines.length) {
+          const l = strippedLines[k];
+
+          // Berhenti jika ketemu POOL market berikutnya
+          if (/POOL/i.test(l) && !uiArtifacts.includes(l)) break;
+
+          // Pattern A: blank → DIGIT → blank (labelthumbnail type)
+          if (k + 2 < strippedLines.length
+              && strippedLines[k] === ''
+              && /^\d{4,5}$/.test(strippedLines[k+1])
+              && strippedLines[k+2] === '') {
+            orphans.push(strippedLines[k+1]);
+            k += 3;
+            continue;
+          }
+
+          // Pattern B: DIGIT → TIME (mm:ss) → btn_live (thumbnail type)
+          if (k + 2 < strippedLines.length
+              && /^\d{4,5}$/.test(strippedLines[k])
+              && strippedLines[k+1].includes(':')
+              && strippedLines[k+2] === 'btn_live') {
+            orphans.push(strippedLines[k]);
+            k += 3;
+            continue;
+          }
+
+          k++;
+        }
+
+        if (orphans.length > 0) {
+          orphanResults[marketHeader] = orphans;
         }
       }
-      addedCount++;
+    }
+
+    // Map orphan results ke market names via slot config
+    ORPHAN_SLOTS.forEach(slot => {
+      const afterHeader = slot.after;
+      const orphans = orphanResults[afterHeader];
+      if (orphans && slot.idx < orphans.length) {
+        const result = orphans[slot.idx];
+        _fillInputRow(slot.market.toUpperCase(), result, '');
+        addedCount++;
+      }
     });
 
     updateInputSummary();
