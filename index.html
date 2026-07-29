@@ -841,13 +841,97 @@ const TGQ = (() => {
     textarea.style.borderColor = '#2ecc71';
     setTimeout(() => { textarea.style.borderColor = ''; }, 1500);
 
-    // Show notification
-    const toolbar = document.querySelector('.input-toolbar');
-    const notif = document.createElement('div');
-    notif.style.cssText = 'color:#2ecc71;font-size:13px;padding:4px 0;animation:fadeIn .3s';
-    notif.textContent = `✅ ${addedCount} market diparse. Cek box di bawah lalu review & kirim.`;
-    textarea.parentNode.appendChild(notif);
-    setTimeout(() => notif.remove(), 4000);
+    // Show popup with parsed markets
+    if (addedCount > 0) {
+      showParsePopup(addedCount);
+    }
+  }
+
+  function showParsePopup(count) {
+    // Remove any existing popup
+    const existing = document.getElementById('parsePopupOverlay');
+    if (existing) existing.remove();
+
+    const overlay = document.createElement('div');
+    overlay.id = 'parsePopupOverlay';
+    overlay.style.cssText = `
+      position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.7);
+      display:flex;align-items:center;justify-content:center;z-index:9999;
+      animation:fadeIn .2s ease;
+    `;
+    overlay.onclick = (e) => { if (e.target === overlay) overlay.remove(); };
+
+    // Build parsed markets table
+    const filled = inputRows.filter(r => {
+      const res = document.getElementById(`inp_${r.name}_result`);
+      const per = document.getElementById(`inp_${r.name}_period`);
+      return (res && res.value) || (per && per.value);
+    });
+
+    let rowsHtml = filled.map(r => {
+      const res = document.getElementById(`inp_${r.name}_result`)?.value || '—';
+      const per = document.getElementById(`inp_${r.name}_period`)?.value || '—';
+      return `<tr>
+        <td style="padding:6px 10px;border-bottom:1px solid rgba(255,255,255,.06);font-weight:600;color:var(--accent-3);font-size:13px">${r.name}</td>
+        <td style="padding:6px 10px;border-bottom:1px solid rgba(255,255,255,.06);font-family:monospace;font-size:14px;text-align:center;letter-spacing:2px">${res}</td>
+        <td style="padding:6px 10px;border-bottom:1px solid rgba(255,255,255,.06);color:var(--text-secondary);font-size:12px;text-align:center">${per}</td>
+      </tr>`;
+    }).join('');
+
+    overlay.innerHTML = `
+      <div style="
+        background:var(--bg-card);border:1px solid var(--border-card);
+        border-radius:var(--radius-lg);padding:32px;max-width:520px;width:90%;
+        box-shadow:0 24px 80px rgba(0,0,0,.5);animation:popIn .25s ease;
+        max-height:80vh;overflow-y:auto;
+      ">
+        <div style="font-size:32px;text-align:center;margin-bottom:8px">✅</div>
+        <h3 style="text-align:center;font-size:18px;font-weight:700;margin-bottom:4px">Parse Berhasil!</h3>
+        <p style="text-align:center;color:var(--text-secondary);font-size:13px;margin-bottom:16px">
+          <strong style="color:#2ecc71;font-size:24px">${count}</strong> market berhasil diparse
+        </p>
+        ${filled.length > 0 ? `
+        <div style="overflow-x:auto;margin-bottom:16px">
+          <table style="width:100%;border-collapse:collapse;font-size:13px">
+            <thead>
+              <tr style="border-bottom:1px solid var(--border-card)">
+                <th style="padding:6px 10px;text-align:left;color:var(--text-muted);font-weight:500">Pasar</th>
+                <th style="padding:6px 10px;text-align:center;color:var(--text-muted);font-weight:500">Result</th>
+                <th style="padding:6px 10px;text-align:center;color:var(--text-muted);font-weight:500">Periode</th>
+              </tr>
+            </thead>
+            <tbody>${rowsHtml}</tbody>
+          </table>
+        </div>` : ''}
+        <div style="display:flex;gap:8px;justify-content:center">
+          <button onclick="this.closest('#parsePopupOverlay').remove()" style="
+            padding:10px 28px;border-radius:var(--radius-sm);background:var(--gradient-btn);
+            color:#fff;border:none;font-size:14px;font-weight:600;cursor:pointer;
+            transition:var(--transition)
+          " onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform=''">
+            🔍 Review & Kirim
+          </button>
+          <button onclick="document.getElementById('lunaPaste').value='';this.closest('#parsePopupOverlay').remove();TGQ.clearInput()" style="
+            padding:10px 20px;border-radius:var(--radius-sm);background:transparent;
+            color:var(--text-muted);border:1px solid var(--border-card);font-size:13px;
+            cursor:pointer;transition:var(--transition)
+          " onmouseover="this.style.color='#e74c3c';this.style.borderColor='#e74c3c'" onmouseout="this.style.color='';this.style.borderColor=''">
+            🗑️ Reset
+          </button>
+        </div>
+        <p style="text-align:center;color:var(--text-muted);font-size:11px;margin-top:12px">Klik di luar popup untuk tutup</p>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    // Add popIn keyframe if not exists
+    if (!document.getElementById('popInStyle')) {
+      const style = document.createElement('style');
+      style.id = 'popInStyle';
+      style.textContent = `@keyframes popIn{0%{transform:scale(.9);opacity:0}100%{transform:scale(1);opacity:1}}`;
+      document.head.appendChild(style);
+    }
   }
 
   function updateInputSummary() {
