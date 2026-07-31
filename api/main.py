@@ -15,17 +15,20 @@ PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 TIME_START_FILE = os.path.join(PROJECT_ROOT, '.run', 'server_start.txt')
 
 def _get_server_start_time():
-    os.makedirs(os.path.dirname(TIME_START_FILE), exist_ok=True)
-    if os.path.exists(TIME_START_FILE):
-        with open(TIME_START_FILE) as f:
-            try:
-                return float(f.read().strip())
-            except (ValueError, OSError):
-                pass
-    now = time.time()
-    with open(TIME_START_FILE, 'w') as f:
-        f.write(str(now))
-    return now
+    try:
+        os.makedirs(os.path.dirname(TIME_START_FILE), exist_ok=True)
+        if os.path.exists(TIME_START_FILE):
+            with open(TIME_START_FILE) as f:
+                try:
+                    return float(f.read().strip())
+                except (ValueError, OSError):
+                    pass
+        now = time.time()
+        with open(TIME_START_FILE, 'w') as f:
+            f.write(str(now))
+        return now
+    except OSError:
+        return time.time()
 
 SERVER_START = _get_server_start_time()
 
@@ -37,6 +40,11 @@ def _format_uptime(elapsed: int) -> str:
     return f"{days:03d}-{hours:02d}-{minutes:02d}-{secs:02d}"
 
 app = FastAPI(title='TGQ — Luna Core API')
+
+
+@app.get('/')
+def root():
+    return HTMLResponse('''<!DOCTYPE html><html><head><meta charset="UTF-8"><meta http-equiv="refresh" content="0;url=/ui/"></head><body style="font-family:sans-serif;display:flex;align-items:center;justify-content:center;height:100vh;margin:0;background:#0f0f17;color:#e2e8f0">Redirecting to <a href="/ui/" style="color:#a78bfa;margin-left:6px">TGQ UI</a>...</body></html>''')
 
 app.add_middleware(
     CORSMiddleware,
