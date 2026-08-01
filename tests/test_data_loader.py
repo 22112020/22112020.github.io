@@ -6,7 +6,7 @@ from core.data_loader import DataLoader
 class TestDataLoader(unittest.TestCase):
     def setUp(self):
         # Create test directory structure
-        self.test_dir = Path("/mnt/d/Alfian/Togelku/tests/.temp_data_loader")
+        self.test_dir = Path(__file__).parent / ".temp_data_loader"
         self.project_root = self.test_dir / "Togelku"
         self.project_root.mkdir(parents=True, exist_ok=True)
         
