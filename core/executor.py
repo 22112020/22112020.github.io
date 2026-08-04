@@ -69,9 +69,23 @@ class Executor:
         
         Ensures latest daily data is always available for prediction engines,
         especially for markets with multiple draws per day (e.g. Toto Macau).
+        
+        On read-only filesystems (mis. serverless), skips sync gracefully.
         """
-        sync = MarketSync(project_root=str(self.project_root))
-        sync.sync_all()
+        try:
+            sync = MarketSync(project_root=str(self.project_root))
+            sync.sync_all()
+        except (OSError, PermissionError) as e:
+            # Read-only filesystem — skip sync
+            import os as _os
+            if _os.name == 'posix' and hasattr(_os, 'access'):
+                import errno as _errno
+                if isinstance(e, OSError) and e.errno == _errno.EROFS:
+                    pass  # Expected on read-only filesystem
+                else:
+                    raise
+            else:
+                raise
 
     def get_available_engines(self) -> List[str]:
         """Get list of available engine names.

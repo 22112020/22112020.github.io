@@ -1,0 +1,9 @@
+{
+  "name": "hongkong_pools",
+  "version": "1.0",
+  "type": "prediction",
+  "rule": "hongkong_pools_rules",
+  "target": ["HONGKONG_POOLS"],
+  "module": "hongkong_pools.hongkong_pools_engine",
+  "class": "HongKongPoolsEngine"
+}
